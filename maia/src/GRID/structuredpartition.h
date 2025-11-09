@@ -9,6 +9,7 @@
 
 #include "INCLUDE/maiatypes.h"
 #include "MEMORY/scratch.h"
+#include <memory>
 
 class ParallelIoHdf5;
 

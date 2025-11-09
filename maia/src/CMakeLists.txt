@@ -159,6 +159,10 @@ if(WITH_LIKWID)
   add_definitions("-DWITH_LIKWID")
   add_definitions("-DLIKWID_PERFMON")
 endif()
+add_definitions("-DWITH_AIXSERVICE")
+add_definitions("-DWITH_ML_INTERFACE")
+
+add_definitions("-DWITH_SCOREP")
 
 # Enable debug functions via command line
 if(ENABLE_DEBUG_FUNCTION)

@@ -9512,7 +9512,7 @@ void GridgenPar<nDim>::communicateIntToNeighbors(MIntScratchSpace& recvMem, MInt
   for(MInt i = 0, rCnt = 0; i < m_noNeighborDomains; i++)
     if(noCellsToReceive[i] > 0) {
       MPI_Irecv(recvMem.getPointer() + noVar * recvOffset[i], noVar * noCellsToReceive[i], MPI_INT,
-                m_neighborDomains[i], 0, MPI_COMM_WORLD, request.getPointer() + rCnt, AT_,
+                m_neighborDomains[i], 0, globalMaiaCommWorld(), request.getPointer() + rCnt, AT_,
                 "recvMem.getPointer() + noVar * recvOffset[i]");
       rCnt++;
     }
@@ -9520,7 +9520,7 @@ void GridgenPar<nDim>::communicateIntToNeighbors(MIntScratchSpace& recvMem, MInt
   for(MInt i = 0; i < m_noNeighborDomains; i++)
     if(noCellsToSend[i] > 0) {
       MPI_Send(sendMem.getPointer() + noVar * sendOffset[i], noVar * noCellsToSend[i], MPI_INT, m_neighborDomains[i], 0,
-               MPI_COMM_WORLD, AT_, "sendMem.getPointer() + noVar * sendOffset[i]");
+               globalMaiaCommWorld(), AT_, "sendMem.getPointer() + noVar * sendOffset[i]");
     }
 
   MPI_Waitall(noRecv, request.getPointer(), status.getPointer(), AT_);

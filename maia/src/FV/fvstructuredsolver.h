@@ -11,6 +11,7 @@
 
 #include <cstring>
 #include <functional>
+#include <vector>
 #include "COMM/mpioverride.h"
 #include "GRID/structuredgrid.h"
 #include "GRID/structuredpartition.h"
@@ -28,6 +29,22 @@
 #include "fvstructuredzonalbc.h"
 #include "solver.h"
 #include "variables.h"
+
+#if defined(WITH_PHYDLL_DIRECT)
+#include "ML/mlCouplingStrategy.h"
+#endif
+#if defined(WITH_PHYDLL)
+#include "ml_coupling/maia/phydll/ml_coupling_maia_phydll.hpp"
+#endif
+
+#if defined(WITH_AIXSERVICE)
+#include "ml_coupling/maia/aix/ml_coupling_maia_aix.hpp"
+#endif
+
+#if defined(WITH_REFERENCE_MODEL)
+#include "ml_coupling/maia/ref/ml_coupling_maia_ref.hpp"
+#endif
+
 
 class ParallelIoHdf5;
 
@@ -919,6 +936,10 @@ class FvStructuredSolver : public Solver, public StructuredPostprocessing<nDim, 
     StructuredPostprocessing<nDim, FvStructuredSolver<nDim>>::initStructuredPostprocessing();
   }
   virtual void saveAverageRestart() { StructuredPostprocessing<nDim, FvStructuredSolver<nDim>>::saveAverageRestart(); }
+
+#if defined(WITH_PHYDLL_DIRECT)
+  std::unique_ptr<MlCouplingStrategy> m_mlCoupler;
+#endif
 };
 
 #endif

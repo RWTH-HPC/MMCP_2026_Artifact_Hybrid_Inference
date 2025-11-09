@@ -45,7 +45,7 @@ void mTerm(const MInt errorCode, const MString& location, const MString& message
     m_log.close(true);
     maia_res.close(true);
 #endif
-    MPI_Abort(MPI_COMM_WORLD, errorCode, AT_);
+    MPI_Abort(globalMaiaCommWorld(), errorCode, AT_);
   } else {
     mDealloc();
 #ifndef PVPLUGIN

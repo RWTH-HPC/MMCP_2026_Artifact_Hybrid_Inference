@@ -12,6 +12,7 @@
 #include <vector>
 #include "COMM/mpioverride.h" // Needed for MPI functionality
 #include "INCLUDE/maiatypes.h"
+#include "COMM/globalmpiinfo.h"
 
 #ifdef _SX
 #include <sys/socket.h>
@@ -132,9 +133,9 @@ class InfoOut_mpiFileBuffer : public InfoOut_buffer {
 
  public:
   InfoOut_mpiFileBuffer();
-  InfoOut_mpiFileBuffer(const MString& filename, const MString& projectName, MPI_Comm mpiComm = MPI_COMM_WORLD);
+  InfoOut_mpiFileBuffer(const MString& filename, const MString& projectName, MPI_Comm mpiComm = globalMaiaCommWorld());
   ~InfoOut_mpiFileBuffer();
-  void open(const MString& filename, const MString& projectName, MPI_Comm mpiComm = MPI_COMM_WORLD);
+  void open(const MString& filename, const MString& projectName, MPI_Comm mpiComm = globalMaiaCommWorld());
   void close(MBool forceClose = false);
   MInt setMinFlushSize(MInt minFlushSize);
 };
@@ -163,10 +164,10 @@ class InfoOut_simpleFileBuffer : public InfoOut_buffer {
 
  public:
   InfoOut_simpleFileBuffer();
-  InfoOut_simpleFileBuffer(const MString& filename, const MString& projectName, MPI_Comm mpiComm = MPI_COMM_WORLD,
+  InfoOut_simpleFileBuffer(const MString& filename, const MString& projectName, MPI_Comm mpiComm = globalMaiaCommWorld(),
                            MBool rootOnlyHardwired = false);
   ~InfoOut_simpleFileBuffer();
-  void open(const MString& filename, const MString& projectName, MPI_Comm mpiComm = MPI_COMM_WORLD,
+  void open(const MString& filename, const MString& projectName, MPI_Comm mpiComm = globalMaiaCommWorld(),
             MBool rootOnlyHardwired = false);
   void close(MBool forceClose = false);
 };
@@ -197,8 +198,8 @@ class InfoOut_streamBuffer : public InfoOut_buffer {
 
  public:
   InfoOut_streamBuffer();
-  InfoOut_streamBuffer(std::ostream* os, MPI_Comm mpiComm = MPI_COMM_WORLD, MBool printDomainId = true);
-  void initialize(std::ostream* os, MPI_Comm mpiComm = MPI_COMM_WORLD, MBool printDomainId = true);
+  InfoOut_streamBuffer(std::ostream* os, MPI_Comm mpiComm = globalMaiaCommWorld(), MBool printDomainId = true);
+  void initialize(std::ostream* os, MPI_Comm mpiComm = globalMaiaCommWorld(), MBool printDomainId = true);
 };
 
 /**
@@ -221,10 +222,10 @@ class InfoOutFile : public InfoOut {
 
  public:
   InfoOutFile();
-  InfoOutFile(const MString& filename, const MString& projectName, MInt fileType = 0, MPI_Comm mpiComm = MPI_COMM_WORLD,
+  InfoOutFile(const MString& filename, const MString& projectName, MInt fileType = 0, MPI_Comm mpiComm = globalMaiaCommWorld(),
               MBool rootOnlyHardwired = false);
   ~InfoOutFile();
-  void open(const MString& filename, const MString& projectName, MInt fileType = 0, MPI_Comm mpiComm = MPI_COMM_WORLD,
+  void open(const MString& filename, const MString& projectName, MInt fileType = 0, MPI_Comm mpiComm = globalMaiaCommWorld(),
             MBool rootOnlyHardwired = false);
   void close(MBool forceClose = false);
   MBool setRootOnly(MBool rootOnly = true);
@@ -246,9 +247,9 @@ class InfoOutStream : public InfoOut {
 
  public:
   InfoOutStream();
-  InfoOutStream(std::ostream* os, MPI_Comm mpiComm = MPI_COMM_WORLD, MBool printDomainId = true);
+  InfoOutStream(std::ostream* os, MPI_Comm mpiComm = globalMaiaCommWorld(), MBool printDomainId = true);
   ~InfoOutStream();
-  void initialize(std::ostream* os, MPI_Comm mpiComm = MPI_COMM_WORLD, MBool printDomainId = true);
+  void initialize(std::ostream* os, MPI_Comm mpiComm = globalMaiaCommWorld(), MBool printDomainId = true);
   MBool setRootOnly(MBool rootOnly = true);
 };
 

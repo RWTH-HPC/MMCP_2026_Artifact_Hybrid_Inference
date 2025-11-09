@@ -100,7 +100,7 @@ class RigidBodies : public maia::CartesianSolver<nDim, RigidBodies<nDim>> {
 
   MInt a_hasNeighbor(const MInt, const MInt) const { mTerm(1, AT_, "Not implemented for this solver!"); }
 
-  MPI_Comm mpiComm() const { return MPI_COMM_WORLD; }
+  MPI_Comm mpiComm() const { return globalMaiaCommWorld(); }
 
   // Adaptation related functions wich need to be overriden
   // Most of them are meanignless for the RB solver itself

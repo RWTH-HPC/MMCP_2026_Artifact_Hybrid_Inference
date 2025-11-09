@@ -14,7 +14,7 @@ flowSolver = true
 restartFile = true		 # START FROM RESTART FILE
 useNonSpecifiedRestartFile = true
 debugOutput = true
-timeSteps = 250 #4000000
+timeSteps = 3000 #4000000
 constantTimeStep = true
 timeStepComputationInterval = 1
 maxIterations = 1
@@ -149,7 +149,7 @@ zonalAvgFactor = 128.0
 maxRfnmntLvl = 8
 executionRecipe = "RECIPE_BASE"
 # TRANSFORMER:
-modelPath = "/hpcwork/rwth0792/MMCP_2026_benchmarks/HybridInferenceMAIA/common/transformer_inference_scripted_fw2.pt"
+modelPath = "/home/rwth0792/mmcp_2026_artifact/input/transformer_inference_scripted_fw2.pt"
 mlInterval = 5
 mlInputLength = 5
 mlStepCoefficient = 12

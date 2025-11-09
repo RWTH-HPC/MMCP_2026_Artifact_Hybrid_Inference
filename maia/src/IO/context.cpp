@@ -100,7 +100,7 @@ void Context::readPropertyFile(FileType fileType, const MString& fileName) {
 
   // use separate file for each rank
   m_propertyFileOutputName.assign("access_properties_domain" + to_string(globalDomainId()) + "_" + to_string(logId));
-  MPI_Barrier(MPI_COMM_WORLD, AT_);
+  MPI_Barrier(globalMaiaCommWorld(), AT_);
 #endif
 #ifdef MAIA_PRINT_PROPERTIES
   cout << "WARNING: MAIA_PRINT_PROPERTIES is enabled. This can slow down the simulation extremely. Furthermore, this "
@@ -865,7 +865,7 @@ void Context::communicateProperties() {
  */
 list<MProperty*>* Context::receiveProperties(MInt rank) {
   TRACE();
-  // cerr << "Processor " <<  MPI_COMM_WORLD.Get_rank() << " is receiving from: " << rank << endl;
+  // cerr << "Processor " <<  globalMaiaCommWorld().Get_rank() << " is receiving from: " << rank << endl;
 
   MInt tag = 0;
   MPI_Status status;
@@ -873,36 +873,36 @@ list<MProperty*>* Context::receiveProperties(MInt rank) {
   MInt listSizes[10];
 
   // Receive list sizes
-  MPI_Recv(listSizes, 10, MPI_INT, rank, tag, MPI_COMM_WORLD, &status, AT_, "listSizes");
+  MPI_Recv(listSizes, 10, MPI_INT, rank, tag, globalMaiaCommWorld(), &status, AT_, "listSizes");
 
   // Receive integer array
   auto* int_ar = new MInt[listSizes[0]];
-  MPI_Recv(int_ar, listSizes[0], MPI_INT, rank, tag, MPI_COMM_WORLD, &status, AT_, "int_ar");
+  MPI_Recv(int_ar, listSizes[0], MPI_INT, rank, tag, globalMaiaCommWorld(), &status, AT_, "int_ar");
 
   // Receive MBool array
   auto* bool_ar = new MBool[listSizes[1]];
-  MPI_Recv(bool_ar, listSizes[1], MPI_C_BOOL, rank, tag, MPI_COMM_WORLD, &status, AT_, "bool_ar");
+  MPI_Recv(bool_ar, listSizes[1], MPI_C_BOOL, rank, tag, globalMaiaCommWorld(), &status, AT_, "bool_ar");
 
   // Receive float array
   auto* float_ar = new MFloat[listSizes[2]];
-  MPI_Recv(float_ar, listSizes[2], MPI_DOUBLE, rank, tag, MPI_COMM_WORLD, &status, AT_, "float_ar");
+  MPI_Recv(float_ar, listSizes[2], MPI_DOUBLE, rank, tag, globalMaiaCommWorld(), &status, AT_, "float_ar");
 
   // Receive string array
   MChar* char_ar = new MChar[listSizes[3]];
-  MPI_Recv(char_ar, listSizes[3], MPI_CHAR, rank, tag, MPI_COMM_WORLD, &status, AT_, "char_ar");
+  MPI_Recv(char_ar, listSizes[3], MPI_CHAR, rank, tag, globalMaiaCommWorld(), &status, AT_, "char_ar");
 
   // Receive name array
   MChar* char_ar2 = new MChar[listSizes[4]];
-  MPI_Recv(char_ar2, listSizes[4], MPI_CHAR, rank, tag, MPI_COMM_WORLD, &status, AT_, "char_ar2");
+  MPI_Recv(char_ar2, listSizes[4], MPI_CHAR, rank, tag, globalMaiaCommWorld(), &status, AT_, "char_ar2");
 
   // Receive offset array
   MInt offset_sizes = listSizes[5] + listSizes[6] + listSizes[7] + listSizes[8] + listSizes[9];
   auto* offset = new MInt[offset_sizes];
-  MPI_Recv(offset, offset_sizes, MPI_INT, rank, tag, MPI_COMM_WORLD, &status, AT_, "offset");
+  MPI_Recv(offset, offset_sizes, MPI_INT, rank, tag, globalMaiaCommWorld(), &status, AT_, "offset");
 
   // Receive offset array
   auto* solverIds = new MInt[listSizes[9]];
-  MPI_Recv(solverIds, listSizes[9], MPI_INT, rank, tag, MPI_COMM_WORLD, &status, AT_, "solverIds");
+  MPI_Recv(solverIds, listSizes[9], MPI_INT, rank, tag, globalMaiaCommWorld(), &status, AT_, "solverIds");
 
   // Build something we can give back and handle in the comparison
   auto* proplist = new list<MProperty*>();
@@ -1054,7 +1054,7 @@ void Context::sendProperties(MInt rank) {
 
   MInt tag = 0;
 
-  // cerr << "Processor " <<  MPI_COMM_WORLD.Get_rank() << " is sending to: " << rank << endl;
+  // cerr << "Processor " <<  globalMaiaCommWorld().Get_rank() << " is sending to: " << rank << endl;
   MInt listSizes[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   list<MProperty*> intProperties;
@@ -1205,28 +1205,28 @@ void Context::sendProperties(MInt rank) {
   }
 
   // Send information about arrays
-  MPI_Send(listSizes, 10, MPI_INT, rank, tag, MPI_COMM_WORLD, AT_, "listSizes");
+  MPI_Send(listSizes, 10, MPI_INT, rank, tag, globalMaiaCommWorld(), AT_, "listSizes");
 
   // Send integer array
-  MPI_Send(int_ar, listSizes[0], MPI_INT, rank, tag, MPI_COMM_WORLD, AT_, "int_ar");
+  MPI_Send(int_ar, listSizes[0], MPI_INT, rank, tag, globalMaiaCommWorld(), AT_, "int_ar");
 
   // Send float array
-  MPI_Send(bool_ar, listSizes[1], MPI_C_BOOL, rank, tag, MPI_COMM_WORLD, AT_, "bool_ar");
+  MPI_Send(bool_ar, listSizes[1], MPI_C_BOOL, rank, tag, globalMaiaCommWorld(), AT_, "bool_ar");
 
   // Send MBool array
-  MPI_Send(float_ar, listSizes[2], MPI_DOUBLE, rank, tag, MPI_COMM_WORLD, AT_, "float_ar");
+  MPI_Send(float_ar, listSizes[2], MPI_DOUBLE, rank, tag, globalMaiaCommWorld(), AT_, "float_ar");
 
   // Send string array
-  MPI_Send(char_ar, listSizes[3], MPI_CHAR, rank, tag, MPI_COMM_WORLD, AT_, "char_ar");
+  MPI_Send(char_ar, listSizes[3], MPI_CHAR, rank, tag, globalMaiaCommWorld(), AT_, "char_ar");
 
   // Send name array
-  MPI_Send(char_ar2, listSizes[4], MPI_CHAR, rank, tag, MPI_COMM_WORLD, AT_, "char_ar2");
+  MPI_Send(char_ar2, listSizes[4], MPI_CHAR, rank, tag, globalMaiaCommWorld(), AT_, "char_ar2");
 
   // Send offset information
-  MPI_Send(offset, offset_sizes, MPI_INT, rank, tag, MPI_COMM_WORLD, AT_, "offset");
+  MPI_Send(offset, offset_sizes, MPI_INT, rank, tag, globalMaiaCommWorld(), AT_, "offset");
 
   // Send solverIds
-  MPI_Send(solverIds, listSizes[9], MPI_INT, rank, tag, MPI_COMM_WORLD, AT_, "solverIds");
+  MPI_Send(solverIds, listSizes[9], MPI_INT, rank, tag, globalMaiaCommWorld(), AT_, "solverIds");
 
   // Clean up
   delete[] offset;

@@ -289,7 +289,7 @@ inline void MTimers::recordTimerStop(const MInt timerId, const MString pos) {
     return;
   }
 #ifdef MAIA_SYNCHRONIZE_TIMERS
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(globalMaiaCommWorld());
 #endif
   stopTimer(timerId, pos);
   recordTimer(timerId, pos);
@@ -376,7 +376,7 @@ inline void MTimers::recordTimerStart(const MInt timerId, const MString pos) {
     return;
   }
 #ifdef MAIA_SYNCHRONIZE_TIMERS
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(globalMaiaCommWorld());
 #endif
   resetTimer(timerId, pos);
   startTimer(timerId, pos);
@@ -441,7 +441,7 @@ inline MFloat MTimers::returnTimer(const MInt timerId, [[maybe_unused]] const MS
 #if MAIA_TIMERS_AVERAGE_OVER_DOMAINS
   const MFloat t = m_timers[timerId].cpuTime;
   MFloat tmp_rcv = 0.0;
-  MPI_Reduce(&t, &tmp_rcv, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&t, &tmp_rcv, 1, MPI_DOUBLE, MPI_SUM, 0, globalMaiaCommWorld());
   return tmp_rcv / globalNoDomains();
 #else
   return m_timers[timerId].cpuTime;
@@ -516,7 +516,7 @@ inline void MTimers::stopAllRecordTimers(const MString pos) {
   for(MInt i = m_timers.size() - 1; i >= 0; i--) {
     if(m_timers[i].status == Timer::Running) {
 #ifdef MAIA_SYNCHRONIZE_TIMERS
-      MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(globalMaiaCommWorld());
 #endif
       stopTimer(i, pos);
       recordTimer(i, pos);

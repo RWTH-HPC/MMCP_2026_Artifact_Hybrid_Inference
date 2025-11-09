@@ -128,7 +128,7 @@ inline void readCSV(std::string path, std::vector<std::vector<MFloat>>& data) {
   std::ifstream stream(path);
 
   MInt rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(globalMaiaCommWorld(), &rank);
 
   if(!rank) {
     // Read data on rank 0
@@ -169,20 +169,20 @@ inline void readCSV(std::string path, std::vector<std::vector<MFloat>>& data) {
     }
 
     // Send data
-    MPI_Bcast(&dim0, 1, MPI_INT, 0, MPI_COMM_WORLD, AT_, "dim0");
-    MPI_Bcast(&dim1, 1, MPI_INT, 0, MPI_COMM_WORLD, AT_, "dim1");
-    MPI_Bcast(&sendBuffer[0], dim0 * dim1, MPI_DOUBLE, 0, MPI_COMM_WORLD, AT_, "sendBuffer");
+    MPI_Bcast(&dim0, 1, MPI_INT, 0, globalMaiaCommWorld(), AT_, "dim0");
+    MPI_Bcast(&dim1, 1, MPI_INT, 0, globalMaiaCommWorld(), AT_, "dim1");
+    MPI_Bcast(&sendBuffer[0], dim0 * dim1, MPI_DOUBLE, 0, globalMaiaCommWorld(), AT_, "sendBuffer");
 
   } else {
     // Receive data
     MInt dim0;
     MInt dim1;
-    MPI_Bcast(&dim0, 1, MPI_INT, 0, MPI_COMM_WORLD, AT_, "dim0");
-    MPI_Bcast(&dim1, 1, MPI_INT, 0, MPI_COMM_WORLD, AT_, "dim1");
+    MPI_Bcast(&dim0, 1, MPI_INT, 0, globalMaiaCommWorld(), AT_, "dim0");
+    MPI_Bcast(&dim1, 1, MPI_INT, 0, globalMaiaCommWorld(), AT_, "dim1");
 
     MFloatVector recvBuffer;
     recvBuffer.resize(dim0 * dim1);
-    MPI_Bcast(&recvBuffer[0], dim0 * dim1, MPI_DOUBLE, 0, MPI_COMM_WORLD, AT_, "recvBuffer");
+    MPI_Bcast(&recvBuffer[0], dim0 * dim1, MPI_DOUBLE, 0, globalMaiaCommWorld(), AT_, "recvBuffer");
 
     for(MInt i = 0; i < dim0; i++) {
       std::vector<MFloat> line;

@@ -70,8 +70,8 @@ void CouplerFvParticle<nDim, SysEqn>::init() {
     noInactiveLPT++;
   }
 
-  MPI_Allreduce(MPI_IN_PLACE, &noInactiveFv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, AT_, "MPI_IN_PLACE", "noInactiveFv");
-  MPI_Allreduce(MPI_IN_PLACE, &noInactiveLPT, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, AT_, "MPI_IN_PLACE",
+  MPI_Allreduce(MPI_IN_PLACE, &noInactiveFv, 1, MPI_INT, MPI_SUM, globalMaiaCommWorld(), AT_, "MPI_IN_PLACE", "noInactiveFv");
+  MPI_Allreduce(MPI_IN_PLACE, &noInactiveLPT, 1, MPI_INT, MPI_SUM, globalMaiaCommWorld(), AT_, "MPI_IN_PLACE",
                 "noInactiveLPT");
   if(noInactiveFv > 0) {
     cerr0 << "Fv solver has " << noInactiveFv << " inactive ranks!" << endl;

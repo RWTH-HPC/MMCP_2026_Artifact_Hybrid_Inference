@@ -6669,7 +6669,7 @@ void LPT<nDim>::resetSolver() {
     if(!m_injData.empty()) {
       vectorSize = m_injData.size();
     }
-    MPI_Allreduce(MPI_IN_PLACE, &vectorSize, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD, AT_, "INPLACE", "vectorSize");
+    MPI_Allreduce(MPI_IN_PLACE, &vectorSize, 1, MPI_INT, MPI_MAX, globalMaiaCommWorld(), AT_, "INPLACE", "vectorSize");
 
     if(vectorSize > 0 && !isActive()) {
       m_injData.clear();

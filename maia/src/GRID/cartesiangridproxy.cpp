@@ -70,8 +70,8 @@ template <MInt nDim>
 Proxy<nDim>::~Proxy() {
   TRACE();
 
-  // Delete created communicator if existing and if it is not MPI_COMM_WORLD
-  if(m_mpiComm != MPI_COMM_NULL && m_mpiComm != MPI_COMM_WORLD) {
+  // Delete created communicator if existing and if it is not globalMaiaCommWorld()
+  if(m_mpiComm != MPI_COMM_NULL && m_mpiComm != globalMaiaCommWorld()) {
     MPI_Comm_free(&m_mpiComm, AT_, "m_mpiComm");
   }
 }
@@ -205,7 +205,7 @@ void Proxy<nDim>::updateParallelizationInfo() {
   }
 
   // Create new MPI communicator (but first delete existing communicator if present)
-  if(m_mpiComm != MPI_COMM_NULL && m_mpiComm != MPI_COMM_WORLD) {
+  if(m_mpiComm != MPI_COMM_NULL && m_mpiComm != globalMaiaCommWorld()) {
     MPI_Comm_free(&m_mpiComm, AT_, "m_mpiComm");
   }
 
@@ -230,14 +230,14 @@ void Proxy<nDim>::updateParallelizationInfo() {
   MPI_Comm_group(raw().mpiComm(), &globalGroup, AT_, "globalGroup");
 
   // @ansgar_largeJob debug stack memory usage
-  // writeMemoryStatistics(MPI_COMM_WORLD, globalNoDomains(), globalDomainId(), AT_, "grid proxy before
+  // writeMemoryStatistics(globalMaiaCommWorld(), globalNoDomains(), globalDomainId(), AT_, "grid proxy before
   // MPI_Group_incl");
 
   // NOTE: allocates large memory chunk on stack on O(100000) ranks (at least on Hawk, 12/21) and scales linear!
   MPI_Group_incl(globalGroup, noDomains_, &domains[0], &localGroup, AT_);
 
   // @ansgar_largeJob debug stack memory usage
-  // writeMemoryStatistics(MPI_COMM_WORLD, globalNoDomains(), globalDomainId(), AT_, "grid proxy after MPI_Group_incl");
+  // writeMemoryStatistics(globalMaiaCommWorld(), globalNoDomains(), globalDomainId(), AT_, "grid proxy after MPI_Group_incl");
 
   // Create new communicator and clean up
   MPI_Comm_create(raw().mpiComm(), localGroup, &m_mpiComm, AT_, "m_mpiComm");

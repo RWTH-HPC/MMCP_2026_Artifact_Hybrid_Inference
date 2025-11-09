@@ -21,12 +21,24 @@ void printMpiInfo(MPI_Info& mpiInfo);
 /// Class to store global MPI information and to prevent accidental changes
 class GlobalMpiInformation {
  public:
-  void init(const MInt domainId, const MInt noDomains) {
+  void init(const MInt domainId, const MInt noDomains, const MPI_Comm maiaCommWorld) {
     m_globalDomainId = domainId;
     m_globalNoDomains = noDomains;
+    m_maiaCommWorld = maiaCommWorld;
 
     initMPIInformation();
   }
+
+  void printInfo() {
+#ifdef MPI_IO_PRINT_INFO
+    // Print MPI information on global rank 0
+    if(m_globalDomainId == 0) {
+      printMpiInfo(m_mpiInfo);
+    }
+#endif
+  }
+
+  MPI_Comm getMaiaCommWorld(){ return m_maiaCommWorld; }
 
  private:
   void initMPIInformation() {
@@ -101,9 +113,11 @@ class GlobalMpiInformation {
   friend MInt globalDomainId();
   friend MInt globalNoDomains();
   friend const MPI_Info& globalMpiInfo();
+  friend MPI_Comm& globalMaiaCommWorld();
 
   MInt m_globalDomainId = 0;
   MInt m_globalNoDomains = 1;
+  MPI_Comm m_maiaCommWorld = MPI_COMM_NULL;
   MPI_Info m_mpiInfo = MPI_INFO_NULL;
 };
 
@@ -115,5 +129,7 @@ inline MInt globalDomainId() { return g_mpiInformation.m_globalDomainId; }
 inline MInt globalNoDomains() { return g_mpiInformation.m_globalNoDomains; }
 /// Return global MPI information
 inline const MPI_Info& globalMpiInfo() { return g_mpiInformation.m_mpiInfo; }
+
+inline MPI_Comm& globalMaiaCommWorld() { return g_mpiInformation.m_maiaCommWorld; }
 
 #endif // MAIA_GLOBALMPIINFO_H

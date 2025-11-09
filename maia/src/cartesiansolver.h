@@ -493,11 +493,11 @@ void CartesianSolver<nDim, SolverType>::receiveWindowTriangles() {
   MIntScratchSpace numUniques(solver().grid().noNeighborDomains(), AT_, "numUniques");
   MInt myNumUniques = solver().geometry().m_uniqueOriginalTriId.size();
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
-    MPI_Issend(&myNumUniques, 1, MPI_INT, solver().grid().neighborDomain(n), 0, MPI_COMM_WORLD, &mpi_request[n], AT_,
+    MPI_Issend(&myNumUniques, 1, MPI_INT, solver().grid().neighborDomain(n), 0, globalMaiaCommWorld(), &mpi_request[n], AT_,
                "myNumUniques");
   }
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
-    MPI_Recv(&numUniques[n], 1, MPI_INT, solver().grid().neighborDomain(n), 0, MPI_COMM_WORLD, &status, AT_,
+    MPI_Recv(&numUniques[n], 1, MPI_INT, solver().grid().neighborDomain(n), 0, globalMaiaCommWorld(), &status, AT_,
              "numUniques[n]");
   }
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
@@ -523,12 +523,12 @@ void CartesianSolver<nDim, SolverType>::receiveWindowTriangles() {
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
     if(!myUniques.empty())
       MPI_Issend(myUniques.getPointer(), myUniques.size(), MPI_INT, solver().grid().neighborDomain(n), 0,
-                 MPI_COMM_WORLD, &mpi_request[n], AT_, "myUniques.getPointer()");
+                 globalMaiaCommWorld(), &mpi_request[n], AT_, "myUniques.getPointer()");
   }
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
     if(numUniques[n] > 0) {
       MPI_Recv(&alluniques[uniquesDomOff[n]], numUniques[n], MPI_INT, solver().grid().neighborDomain(n), 0,
-               MPI_COMM_WORLD, &status, AT_, "alluniques[uniquesDomOff[n]]");
+               globalMaiaCommWorld(), &status, AT_, "alluniques[uniquesDomOff[n]]");
     }
   }
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
@@ -576,13 +576,13 @@ void CartesianSolver<nDim, SolverType>::receiveWindowTriangles() {
   // 3. send information how many triangles will be send
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
     MInt numtris = triangleIdsPerDomain[n].size();
-    MPI_Issend(&numtris, 1, MPI_INT, solver().grid().neighborDomain(n), 0, MPI_COMM_WORLD, &mpi_request[n], AT_,
+    MPI_Issend(&numtris, 1, MPI_INT, solver().grid().neighborDomain(n), 0, globalMaiaCommWorld(), &mpi_request[n], AT_,
                "numtris");
   }
 
   // receive information
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
-    MPI_Recv(&toReceive[n], 1, MPI_INT, solver().grid().neighborDomain(n), 0, MPI_COMM_WORLD, &status, AT_,
+    MPI_Recv(&toReceive[n], 1, MPI_INT, solver().grid().neighborDomain(n), 0, globalMaiaCommWorld(), &status, AT_,
              "toReceive[n]");
   }
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
@@ -662,7 +662,7 @@ void CartesianSolver<nDim, SolverType>::receiveWindowTriangles() {
       }
     }
     MPI_Issend(sndTris.getPointer() + (offsetsend[n] * trisize), trisize * triangleIdsPerDomain[n].size(), MPI_DOUBLE,
-               solver().grid().neighborDomain(n), 0, MPI_COMM_WORLD, &mpi_request[n], AT_,
+               solver().grid().neighborDomain(n), 0, globalMaiaCommWorld(), &mpi_request[n], AT_,
                "sndTris.getPointer()+(offsetsend[n]*trisize)");
   }
 
@@ -671,7 +671,7 @@ void CartesianSolver<nDim, SolverType>::receiveWindowTriangles() {
   for(MInt n = 0; n < solver().grid().noNeighborDomains(); n++) {
     if(toReceive[n] > 0) {
       MPI_Recv(recTris.getPointer() + (offsetreceive[n] * trisize), toReceive[n] * trisize, MPI_DOUBLE,
-               solver().grid().neighborDomain(n), 0, MPI_COMM_WORLD, &status, AT_,
+               solver().grid().neighborDomain(n), 0, globalMaiaCommWorld(), &status, AT_,
                "recTris.getPointer()+(offsetreceive[n]*trisize)");
     }
   }

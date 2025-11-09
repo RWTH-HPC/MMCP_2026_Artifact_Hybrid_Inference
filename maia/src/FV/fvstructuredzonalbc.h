@@ -7,6 +7,7 @@
 #ifndef STRUCTUREDZONALBC_H
 #define STRUCTUREDZONALBC_H
 
+#include <memory>
 #include <vector>
 #include "fvstructuredinterpolation.h"
 #include "globals.h"

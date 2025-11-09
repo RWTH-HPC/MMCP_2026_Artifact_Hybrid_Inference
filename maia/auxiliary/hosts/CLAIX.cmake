@@ -42,24 +42,62 @@ set(LIBRARY_NAMES
 )
 
 set(HOST_CONFIGURE_GNU
-    "module load GCC/11.3.0 OpenMPI"
-    "module load PnetCDF"
-    "module load FFTW.MPI"
-    "module load CMake"
+    #"module load GCC/11.3.0 OpenMPI"
+    #"module load PnetCDF"
+    #"module load FFTW.MPI"
+    #"module load CMake"
 )
 
+if(WITH_HDF5)
+    set(HOST_CONFIGURE_GNU
+        #"module load GCC/11.3.0 OpenMPI"
+        #"module load PnetCDF"
+        #"module load FFTW.MPI"
+        #"module load CMake"
+        #"module load HDF5"
+        #"module load Szip"
+    )
+endif()
+
 set(HOST_CONFIGURE_Intel
-    "module load intel/2022a impi"
-    "module load PnetCDF"
-    "module load CMake"
+    #"module load intel/2022a impi"
+    #"module load PnetCDF"
+    #"module load CMake"
 )
 
 if(WITH_HDF5)
    set(HOST_CONFIGURE_INTEL
-       "module load LIBRARIES"
-       "module load hdf5/1.10.4"
-       "module load intelmkl"
+       #"module load LIBRARIES"
+       #"module load hdf5/1.10.4"
+       #"module load intelmkl"
    )
+endif()
+
+# HDF5
+if(WITH_HDF5)
+    if(WITH_GNU)
+#  # note: if HDF5 module is loaded on CLAIX, it will define HDF5_DIR
+        #set(INCLUDE_DIRS ${INCLUDE_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/HDF5/1.14.5-gompi-2024a/include")
+        #set(INCLUDE_DIRS ${INCLUDE_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/Szip/2.1.1-GCCcore-13.3.0/include")
+        #set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/HDF5/1.14.5-gompi-2024a/lib")
+        #set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/Szip/2.1.1-GCCcore-13.3.0/lib")
+        
+        set(INCLUDE_DIRS ${INCLUDE_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/HDF5/1.14.3-gompi-2023b/include")
+        set(INCLUDE_DIRS ${INCLUDE_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/Szip/2.1.1-GCCcore-13.2.0/include")
+        set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/HDF5/1.14.3-gompi-2023b/lib")
+        set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH9/x86_64/intel/sapphirerapids/software/Szip/2.1.1-GCCcore-13.2.0/lib")
+    endif()
+    if(WITH_INTEL)
+        set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH8/x86_64/intel/sapphirerapids/software/HDF5/1.14.0-iimpi-2022a/include")
+        set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH8/x86_64/intel/sapphirerapids/software/HDF5/1.14.0-iimpi-2022a/lib")
+        set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH8/x86_64/intel/sapphirerapids/software/Szip/2.1.1-GCCcore-11.3.0/include")
+        set(LIBRARY_DIRS ${LIBRARY_DIRS} "/cvmfs/software.hpc.rwth.de/Linux/RH8/x86_64/intel/sapphirerapids/software/Szip/2.1.1-GCCcore-11.3.0/lib")
+    endif()
+    set(LIBRARY_NAMES ${LIBRARY_NAMES} "hdf5_hl")
+    set(LIBRARY_NAMES ${LIBRARY_NAMES} "hdf5")
+    set(LIBRARY_NAMES ${LIBRARY_NAMES} "z")
+    set(LIBRARY_NAMES ${LIBRARY_NAMES} "dl")
+    set(LIBRARY_NAMES ${LIBRARY_NAMES} "sz")
 endif()
 
 # CANTERA
@@ -73,6 +111,45 @@ endif()
 
 ################################################################################
 # Set additional include/library directories or libraries for certain compilers
+
+################################################################################
+# Set additional include/library directories or libraries for PhyDLL
+
+#set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../../phydll/phydll/BUILD/include)
+#set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../../phydll/phydll/BUILD/lib)
+#set(LIBRARY_NAMES ${LIBRARY_NAMES} "phydll")
+
+#####################
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/libtorch/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/libtorch/lib)
+set(LIBRARY_NAMES ${LIBRARY_NAMES} "torch" "c10" "torch_cpu" "torch_cuda")
+
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/aixeleratorservice/INSTALL-SCOREP/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/aixeleratorservice/INSTALL-SCOREP/lib)
+set(LIBRARY_NAMES ${LIBRARY_NAMES} "AIxeleratorService")
+
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/phydll/BUILD-SCOREP/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/phydll/BUILD-SCOREP/lib)
+set(LIBRARY_NAMES ${LIBRARY_NAMES} "phydll")
+
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/BUILD-SCOREP/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/BUILD-SCOREP/lib)
+set(LIBRARY_NAMES ${LIBRARY_NAMES} "mlCoupling")
+
+################################################################################
+
+################################################################################
+# Set additional include/library directories or libraries for HighFive
+#set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../../HighFive/HighFive/BUILD/INSTALL/include)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/HighFive/BUILD/INSTALL/include)
+################################################################################
+
+
+################################################################################
+# Set (if necessary) host-specific default options for the configuration process
+# Note: To find out about supported options, check configure.py
+set(HOST_DEFAULT_OPTIONS "WITH_HDF5")
+set(HOST_DEFAULT_OPTIONS ${HOST_DEFAULT_OPTIONS})
 
 ################################################################################
 # Set (if necessary) configuration commands that should be executed when

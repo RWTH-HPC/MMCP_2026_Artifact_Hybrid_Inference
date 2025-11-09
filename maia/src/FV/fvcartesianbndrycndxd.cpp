@@ -5842,7 +5842,7 @@ void FvBndryCndXD<nDim, SysEqn>::initBndryCommunications() {
   //  {
   //    for( MInt i = 0; i < m_comm_bc_init; i++ )
   //      {
-  //        if(m_comm_bc[ i ] != MPI_COMM_NULL && m_comm_bc[i] != MPI_COMM_WORLD)
+  //        if(m_comm_bc[ i ] != MPI_COMM_NULL && m_comm_bc[i] != globalMaiaCommWorld())
   //          MPI_Comm_free(&m_comm_bc[ i ], AT_, "m_comm_bc[i]");
   //  }
   //}
@@ -5939,7 +5939,7 @@ void FvBndryCndXD<nDim, SysEqn>::initBndryCommunications() {
   //  {
   //    for( MInt i = 0; i < m_comm_bcCo_init; i++ )
   //      {
-  //        if(m_comm_bcCo[ i ] != MPI_COMM_NULL && m_comm_bcCo[i] != MPI_COMM_WORLD)
+  //        if(m_comm_bcCo[ i ] != MPI_COMM_NULL && m_comm_bcCo[i] != globalMaiaCommWorld())
   //          MPI_Comm_free(&m_comm_bcCo[ i ], AT_, "m_comm_bcCo[]i");
   //  }
   //}
@@ -23643,7 +23643,7 @@ void FvBndryCndXD<nDim, SysEqn>::resetBndryCommunication() {
   TRACE();
   if(m_comm_bc_init > 0) {
     for(MInt i = 0; i < m_comm_bc_init; i++) {
-      if(m_comm_bc[i] != MPI_COMM_NULL && m_comm_bc[i] != MPI_COMM_WORLD) {
+      if(m_comm_bc[i] != MPI_COMM_NULL && m_comm_bc[i] != globalMaiaCommWorld()) {
         MPI_Comm_free(&m_comm_bc[i], AT_, "m_comm_bc[i]");
       }
     }
@@ -23651,7 +23651,7 @@ void FvBndryCndXD<nDim, SysEqn>::resetBndryCommunication() {
 
   if(m_comm_bcCo_init > 0) {
     for(MInt i = 0; i < m_comm_bcCo_init; i++) {
-      if(m_comm_bcCo[i] != MPI_COMM_NULL && m_comm_bcCo[i] != MPI_COMM_WORLD) {
+      if(m_comm_bcCo[i] != MPI_COMM_NULL && m_comm_bcCo[i] != globalMaiaCommWorld()) {
         MPI_Comm_free(&m_comm_bcCo[i], AT_, "m_comm_bcCo[]i");
       }
     }

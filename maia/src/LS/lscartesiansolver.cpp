@@ -1216,7 +1216,7 @@ MBool LsCartesianSolver<nDim>::semiLagrangeTimeStep() {
                 if(cnt > 0) cerr << "D:" << domainId() << " Restart Backup LS!" << endl;
               }
 
-              MPI_Bcast(&cnt, 1, MPI_INT, dom, MPI_COMM_WORLD, AT_, "cnt");
+              MPI_Bcast(&cnt, 1, MPI_INT, dom, globalMaiaCommWorld(), AT_, "cnt");
 
               for(MInt c = 0; c < cnt; c++) {
                 containingCell = -1;
@@ -1231,7 +1231,7 @@ MBool LsCartesianSolver<nDim>::semiLagrangeTimeStep() {
                   }
                 }
 
-                MPI_Bcast(&xInitial[0], 3, maia::type_traits<MFloat>::mpiType(), dom, MPI_COMM_WORLD, AT_,
+                MPI_Bcast(&xInitial[0], 3, maia::type_traits<MFloat>::mpiType(), dom, globalMaiaCommWorld(), AT_,
                           "xInitial[0]");
 
                 containingCell = getContainingCell(xInitial);

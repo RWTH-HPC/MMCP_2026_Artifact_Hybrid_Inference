@@ -17,7 +17,7 @@ set(_cxx_flags_default "-Werror=return-type" "-Wall" "-Wextra" "-std=c++17" "-pe
     "-Wformat=2" "-Winvalid-pch" "-Winit-self" "-Wmissing-include-dirs"
     "-Wredundant-decls" "-Wpacked" "-Wpointer-arith" "-Wstack-protector"
     "-Wstrict-aliasing=3" "-Wswitch-default" "-Wwrite-strings" "-Wlogical-op"
-    "-fdiagnostics-color" "-Wlogical-op" "-Wshift-overflow=2" "-Wnull-dereference"
+    "-fdiagnostics-color" "-Wlogical-op" "-Wshift-overflow=2"
     "-Wunused-const-variable=1" "-Wduplicated-branches"
     "-Wvla-larger-than=8" "-Walloc-zero"
     "-Wformat-overflow=1" "-Wduplicated-cond" "-Warray-bounds=2"
@@ -27,6 +27,14 @@ set(_cxx_flags_default "-Werror=return-type" "-Wall" "-Wextra" "-std=c++17" "-pe
     # "-Wmismatched-tags" # gcc-10.2.0 internal compiler error
     #"-Wold-style-cast"
     )
+
+# Removes flag that lead to errors when using RAISE-ML branch
+list(REMOVE_ITEM _cxx_flags_default "-Wredundant-tags")
+list(REMOVE_ITEM _cxx_flags_default "-Wuseless-cast")
+list(REMOVE_ITEM _cxx_flags_default "-Wdeprecated-copy-dtor")
+# these flag lead to build errors when using HighFive
+list(REMOVE_ITEM _cxx_flags_default "-Werror=return-type")
+
 
 # Removes flag not supported before GCC10
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
@@ -61,8 +69,9 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7)
 endif()
 
 # Debug
-set(_cxx_flags_debug "-Og" "-g3" "-fno-inline" "-gdwarf-4" "-DCOMPILER_ATTRIBUTES"
-  "-DMAIA_ASSERTS" "-DMAIA_ASSERT_ALLOC" "-DMAIA_ASSERT_TIMER_CHECKS" "-DMAIA_NCMPI_PRINT_FILE_HINTS"
+set(_cxx_flags_debug "-Og" "-g3" "-fno-inline" "-gdwarf-4" "-Wnull-dereference" 
+  "-DCOMPILER_ATTRIBUTES" "-DMAIA_ASSERTS" "-DMAIA_ASSERT_ALLOC"
+  "-DMAIA_ASSERT_TIMER_CHECKS" "-DMAIA_NCMPI_PRINT_FILE_HINTS"
   "-DMAIA_PROFILING")
 
 # Production
@@ -77,6 +86,7 @@ set(_cxx_flags_production_assert "-O3" "-g3" "-fstrict-aliasing"
 # Extreme
 set(_cxx_flags_extreme ${_cxx_flags_production} "-pipe"
     "-flto=20" "-Wno-unknown-pragmas" "-Wno-maybe-uninitialized"  "-Wno-null-dereference"
+    "-Wno-alloc-size-larger-than" "-Wno-stringop-overflow" "-Wno-error=array-bounds"
     "-fdata-sections" "-ffunction-sections" "-Wl,--gc-sections"
     "-funsafe-loop-optimizations" "-funsafe-math-optimizations"
     "-fcx-limited-range" "-fno-signaling-nans" "-DDISABLE_FV_MG"
@@ -90,6 +100,7 @@ if(${MAIA_HOST} MATCHES "AIA")
   list(APPEND _cxx_flags_debug "-fuse-ld=lld")
   list(APPEND _cxx_flags_production "-fuse-ld=lld")
   list(APPEND _cxx_flags_production_assert "-fuse-ld=lld")
+  list(APPEND _cxx_flags_production "-march=westmere") # Note: newer versions not everywhere supported "x86-64-v3" "cascadelake"
 endif()
 
 # Add/remove some compiler flags for Power8 as they either don't make sense
@@ -120,7 +131,10 @@ endif()
 
 if(${MAIA_HOST} MATCHES "Hawk")
   list(APPEND _cxx_flags_default "-march=znver2" "-mtune=znver2")
-  list(APPEND _cxx_flags_extreme "-Wno-alloc-size-larger-than")
+endif()
+
+if(${MAIA_HOST} MATCHES "CLAIX")
+  list(APPEND _cxx_flags_production "-march=sapphirerapids")
 endif()
 
 #CANTERA
@@ -154,6 +168,8 @@ set(_cmake_cxx_flags_production
     ${_cxx_flags_production}
     "-Werror"
     ${_cxx_flags_default})
+list(REMOVE_ITEM _cmake_cxx_flags_production "-Werror") # for RAISE-ML 
+list(REMOVE_ITEM _cmake_cxx_flags_production "-fno-exceptions") # for RAISE-ML 
 set(_cmake_cxx_flags_extreme
     ${_cxx_flags_extreme}
     "-Werror"
@@ -180,6 +196,7 @@ set(_cmake_cxx_flags_sanitize_thread
     ${_cxx_flags_production}
     "-Werror"
     "-fsanitize=thread" "-DMAIA_SANITIZE_THREAD"
+    "-g"
     ${_cxx_flags_default})
 set(_cmake_cxx_flags_sanitize_undefined
     ${_cxx_flags_production}

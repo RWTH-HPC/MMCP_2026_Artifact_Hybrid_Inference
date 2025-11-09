@@ -597,15 +597,15 @@ assembly* IONetcdf::readPropertyFile(const MString& name) {
       }
       // END OF DATA COLLECTION --> SENDING THE INFORMATION TO OTHER PROCESSES
       MInt dummyInt[5] = {noProperties, totalCount, zoneCount, noZones, m_noSolvers};
-      MPI_Bcast(&dummyInt, 5, MPI_INT, 0, MPI_COMM_WORLD, AT_, "dummyInt");
-      MPI_Bcast(propMapArray.getPointer(), sizeofallProp, MPI_CHAR, 0, MPI_COMM_WORLD, AT_,
+      MPI_Bcast(&dummyInt, 5, MPI_INT, 0, globalMaiaCommWorld(), AT_, "dummyInt");
+      MPI_Bcast(propMapArray.getPointer(), sizeofallProp, MPI_CHAR, 0, globalMaiaCommWorld(), AT_,
                 "propMapArray.getPointer()");
-      MPI_Bcast(zoneMapArray.getPointer(), sizeofZones, MPI_CHAR, 0, MPI_COMM_WORLD, AT_, "zoneMapArray.getPointer()");
+      MPI_Bcast(zoneMapArray.getPointer(), sizeofZones, MPI_CHAR, 0, globalMaiaCommWorld(), AT_, "zoneMapArray.getPointer()");
       //->root has finished
     } else { // ALL OTHER PROCESSES
       //--> receive data
       MInt dummyInt[5] = {0, 0, 0, 0, 0};
-      MPI_Bcast(&dummyInt, 5, MPI_INT, 0, MPI_COMM_WORLD, AT_, "dummyInt");
+      MPI_Bcast(&dummyInt, 5, MPI_INT, 0, globalMaiaCommWorld(), AT_, "dummyInt");
       MInt noProperties = dummyInt[0];
       MInt totalCount = dummyInt[1];
       MInt zoneCount = dummyInt[2];
@@ -618,9 +618,9 @@ assembly* IONetcdf::readPropertyFile(const MString& name) {
       MCharScratchSpace zoneMapArray(sizeofZones, AT_, "zoneMapArrayAsChar");
       zoneMapArray.fill(0);
       //-> receive data from root
-      MPI_Bcast(propMapArray.getPointer(), sizeofallProp, MPI_CHAR, 0, MPI_COMM_WORLD, AT_,
+      MPI_Bcast(propMapArray.getPointer(), sizeofallProp, MPI_CHAR, 0, globalMaiaCommWorld(), AT_,
                 "propMapArray.getPointer()");
-      MPI_Bcast(zoneMapArray.getPointer(), sizeofZones, MPI_CHAR, 0, MPI_COMM_WORLD, AT_, "zoneMapArray.getPointer()");
+      MPI_Bcast(zoneMapArray.getPointer(), sizeofZones, MPI_CHAR, 0, globalMaiaCommWorld(), AT_, "zoneMapArray.getPointer()");
       //-> create properties again
       MProperty* p;
       MInt pCounter = 0;
@@ -750,7 +750,7 @@ assembly* IONetcdf::readPropertyFile(const MString& name) {
     //??? todo labels:IO change MPropertySeperator to MPropertySeparator
     const char MPropertySeperator = '.'; // Separator that defines different Properties
     /*open the property file*/
-    ParallelIo parallelIo(name, maia::parallel_io::PIO_READ, MPI_COMM_WORLD);
+    ParallelIo parallelIo(name, maia::parallel_io::PIO_READ, globalMaiaCommWorld());
     /* get the number of solvers  */
     MInt dsolvers;
     if(!parallelIo.hasDataset("noSolvers", 0)) {

@@ -37,6 +37,27 @@
 #include <tbb/parallel_for.h>
 #endif
 
+#ifdef WITH_PHYDLL_DIRECT
+#include "ML/mlCouplerPhyDLL.h"
+#endif
+#if defined(WITH_PHYDLL)
+#include "ml_coupling/maia/phydll/ml_coupling_maia_phydll.hpp"
+#endif
+
+#if defined(WITH_AIXSERVICE)
+#include "ml_coupling/maia/aix/ml_coupling_maia_aix.hpp"
+#endif
+
+#if defined(WITH_REFERENCE_MODEL)
+#include "ml_coupling/maia/ref/ml_coupling_maia_ref.hpp"
+#endif
+
+#ifdef WITH_SCOREP
+#include <scorep/SCOREP_User.h>
+
+SCOREP_USER_REGION_DEFINE(maiaRunRegion);
+#endif
+
 using namespace std;
 
 Environment* mEnvironment = nullptr;
@@ -54,6 +75,10 @@ int main(int argc, char* argv[]) {
 
 /// Main controlling method for MAIA. Calls everything else.
 int MAIA::run() {
+    #ifdef WITH_SCOREP
+        SCOREP_USER_REGION_BEGIN(maiaRunRegion, "m-AIA-Solver::run", SCOREP_USER_REGION_TYPE_FUNCTION);
+    #endif
+
   // Initialize MPI communication
   // Profiling uses MPI_Wtime, i.e. the first DEBUG call requires MPI to be initialized already
 #ifdef _OPENMP
@@ -84,15 +109,54 @@ int MAIA::run() {
   MPI_Init(&m_argc, &m_argv);
 #endif
   int domainId, noDomains;
+
+  /*
+   * note(Fabian Orland, 20th December 2023):
+   * for the coupling of m-AIA with PhyDLL in the context of CoE RAISE project,
+   * m-AIA will be launched in an MPMD fashion like:
+   *   mpirun -np X maia : -np Y python3 phydll_DLEngine.py
+   * Thus, the MPI_COMM_WORLD communicator will also contain Python processes 
+   * that execute the DL script. 
+   * As soon as m-AIA calls into collective MPI operations on MPI_COMM_WORLD,
+   * a deadlock will occur as the Python DL processes are not part of that.
+   * As a solution we encapsulate a "local maia world communicator" in
+   * the global mpiInformation object and replace all occurrences of 
+   * MPI_COMM_WORLD by globalMaiaCommWorld().
+   */
+  MPI_Comm maiaCommWorld = MPI_COMM_WORLD;
+#ifdef WITH_PHYDLL_DIRECT
+  phydll_init((char*)"physical");
+  maiaCommWorld = phydll_get_local_mpi_comm();
+#endif
+#ifdef WITH_PHYDLL
+  m_mlCoupler = std::make_unique<MLCouplingMaiaPhyDLL>();
+  m_mlCoupler->init();
+  maiaCommWorld = m_mlCoupler->getComm();
+#endif
+#ifdef WITH_AIXSERVICE
+  m_mlCoupler = std::make_unique<MLCouplingMaiaAix>();
+  m_mlCoupler->init();
+#endif
+#ifdef WITH_REFERENCE_MODEL
+  m_mlCoupler = std::make_unique<MLCouplingMaiaRef>();
+  m_mlCoupler->init();
+#endif
+  MPI_Comm_size(maiaCommWorld, &noDomains);
+  MPI_Comm_rank(maiaCommWorld, &domainId);
+  g_mpiInformation.init(domainId, noDomains, maiaCommWorld);
+
+  // Set MPI error handling (return error and handle in code)
+  MPI_Comm_set_errhandler(globalMaiaCommWorld(), MPI_ERRORS_RETURN);
+
 #ifndef MAIA_WINDOWS
   fftw_mpi_init();
 #endif
-  MPI_Comm_rank(MPI_COMM_WORLD, &domainId);
-  MPI_Comm_size(MPI_COMM_WORLD, &noDomains);
-  g_mpiInformation.init(domainId, noDomains);
+  // MPI_Comm_rank(MPI_COMM_WORLD, &domainId);
+  // MPI_Comm_size(MPI_COMM_WORLD, &noDomains);
+  // g_mpiInformation.init(domainId, noDomains);
 
-  // Set MPI error handling (return error and handle in code)
-  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+  // // Set MPI error handling (return error and handle in code)
+  // MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
   // Open cerr0 on MPI root
   if(domainId == 0) {
@@ -120,10 +184,10 @@ int MAIA::run() {
 
   // Open log file
 #if(MAIA_INFOOUT_FILE_TYPE == 1 && MAIA_INFOOUT_ROOT_ONLY == false)
-  m_log.open("m_log_" + to_string(globalDomainId()), MAIA_INFOOUT_PROJECT_NAME, MAIA_INFOOUT_FILE_TYPE, MPI_COMM_WORLD,
+  m_log.open("m_log_" + to_string(globalDomainId()), MAIA_INFOOUT_PROJECT_NAME, MAIA_INFOOUT_FILE_TYPE, globalMaiaCommWorld(),
              MAIA_INFOOUT_ROOT_ONLY);
 #else
-  m_log.open("m_log", MAIA_INFOOUT_PROJECT_NAME, MAIA_INFOOUT_FILE_TYPE, MPI_COMM_WORLD, MAIA_INFOOUT_ROOT_ONLY);
+  m_log.open("m_log", MAIA_INFOOUT_PROJECT_NAME, MAIA_INFOOUT_FILE_TYPE, globalMaiaCommWorld(), MAIA_INFOOUT_ROOT_ONLY);
 #endif
 
   // Set root-only writing property
@@ -164,6 +228,8 @@ int MAIA::run() {
   DEBUG("main:: new Environment", MAIA_DEBUG_LEVEL1);
   mEnvironment = new Environment(m_argc, m_argv);
   RECORD_TIMER_STOP(timer1);
+
+  g_mpiInformation.printInfo();
 
   // Run MAIA... YEHAW!
   DEBUG("main:: mEnvironment->run", MAIA_DEBUG_LEVEL1);
@@ -215,7 +281,18 @@ int MAIA::run() {
   // Note: do not use DEBUG() after m_log has been closed!
   // DEBUG("main:: MPI_Finalize", MAIA_DEBUG_LEVEL1);
 #ifndef MAIA_WINDOWS
-  fftw_mpi_cleanup();
+  fftw_mpi_cleanup(); // note(Fabian Orland, April 2nd, 2025) commented out for now because it leads to invalid free on exit
+#endif
+
+#ifdef WITH_PHYDLL_DIRECT
+  phydll_finalize();
+#endif
+#if defined(WITH_PHYDLL) || defined(WITH_AIXSERVICE) || defined(WITH_REFERENCE_MODEL) 
+  m_mlCoupler->finalize();
+#endif
+
+  #ifdef WITH_SCOREP
+      SCOREP_USER_REGION_END(maiaRunRegion);
 #endif
   MPI_Finalize();
 

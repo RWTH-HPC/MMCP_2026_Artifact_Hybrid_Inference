@@ -392,9 +392,9 @@ Application::Application() {
 
   if(gridGeneration) {
     if(nDim == 2) {
-      GridgenPar<2>(MPI_COMM_WORLD, m_noSolvers);
+      GridgenPar<2>(globalMaiaCommWorld(), m_noSolvers);
     } else {
-      GridgenPar<3>(MPI_COMM_WORLD, m_noSolvers);
+      GridgenPar<3>(globalMaiaCommWorld(), m_noSolvers);
     }
     return;
   }
@@ -542,7 +542,7 @@ void Application::initTimings() {
 
   MInt maxNoGlobalSolverTimers = -1;
   MPI_Allreduce(&m_noGlobalSolverTimers, &maxNoGlobalSolverTimers, 1, maia::type_traits<MInt>::mpiType(), MPI_MAX,
-                MPI_COMM_WORLD, AT_, "m_noGlobalSolverTimers", "maxNoGlobalSolverTimers");
+                globalMaiaCommWorld(), AT_, "m_noGlobalSolverTimers", "maxNoGlobalSolverTimers");
   if(maxNoGlobalSolverTimers != m_noGlobalSolverTimers) {
     TERMM(1, "Error: number of global solver timings does not match on all domains.");
   }
@@ -593,7 +593,7 @@ template <MInt nDim>
 void Application::run() {
   TRACE();
   cerr0 << endl << "=== MAIA RUN LOOP ===" << endl << endl;
-  const MPI_Comm comm = MPI_COMM_WORLD;
+  const MPI_Comm comm = globalMaiaCommWorld();
   const MFloat runTimeStart = wallTime();
 
   auto logDuration = [&](const MFloat timeStart, const MString comment) {
@@ -2459,7 +2459,7 @@ void Application::storeTimingsAndSolverInformation(const MBool finalTimeStep) {
     }
   }
 
-  ParallelIo file(fileName.str(), PIO_REPLACE, MPI_COMM_WORLD);
+  ParallelIo file(fileName.str(), PIO_REPLACE, globalMaiaCommWorld());
   file.defineArray(PIO_INT, "timeStep", noTimings);
 
   const MInt noInfo = m_domainInfo.size();

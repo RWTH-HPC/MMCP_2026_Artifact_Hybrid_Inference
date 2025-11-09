@@ -1460,8 +1460,8 @@ void LsFvMb<nDim, SysEqn>::init() {
     noInactiveLs++;
   }
 
-  MPI_Allreduce(MPI_IN_PLACE, &noInactiveFv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, AT_, "MPI_IN_PLACE", "noInactiveFv");
-  MPI_Allreduce(MPI_IN_PLACE, &noInactiveLs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, AT_, "MPI_IN_PLACE", "noInactiveLs");
+  MPI_Allreduce(MPI_IN_PLACE, &noInactiveFv, 1, MPI_INT, MPI_SUM, globalMaiaCommWorld(), AT_, "MPI_IN_PLACE", "noInactiveFv");
+  MPI_Allreduce(MPI_IN_PLACE, &noInactiveLs, 1, MPI_INT, MPI_SUM, globalMaiaCommWorld(), AT_, "MPI_IN_PLACE", "noInactiveLs");
   if(noInactiveFv > 0) {
     cerr0 << "FvMb solver has " << noInactiveFv << " inactive ranks!" << endl;
   }

@@ -169,19 +169,19 @@ assembly* IOToml::readPropertyFile(const MString& fileName) {
     strcpy(text.data(), ss.str().c_str());
 
     // Broadcast string length and contents
-    MPI_Bcast(&length, 1, MPI_INT, 0, MPI_COMM_WORLD, AT_, "length");
-    MPI_Bcast(text.data(), length, MPI_CHAR, 0, MPI_COMM_WORLD, AT_, "text.data()");
+    MPI_Bcast(&length, 1, MPI_INT, 0, globalMaiaCommWorld(), AT_, "length");
+    MPI_Bcast(text.data(), length, MPI_CHAR, 0, globalMaiaCommWorld(), AT_, "text.data()");
 
     // Store file content in string
     m_rawText = ss.str();
   } else {
     // On all other domains, first receive string length
     MInt length = -1;
-    MPI_Bcast(&length, 1, MPI_INT, 0, MPI_COMM_WORLD, AT_, "length");
+    MPI_Bcast(&length, 1, MPI_INT, 0, globalMaiaCommWorld(), AT_, "length");
 
     // Then receive file contents
     vector<MChar> text(length);
-    MPI_Bcast(text.data(), length, MPI_CHAR, 0, MPI_COMM_WORLD, AT_, "text.data()");
+    MPI_Bcast(text.data(), length, MPI_CHAR, 0, globalMaiaCommWorld(), AT_, "text.data()");
 
     // Store file content in string
     m_rawText = text.data();

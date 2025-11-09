@@ -24,6 +24,7 @@
 #include "IO/context.h"
 #include "UTIL/debug.h"
 #include "lbsrcterm.h"
+#include <memory>
 
 template <MInt nDim, MInt nDist, class SysEqn>
 class LbSolverDxQy;

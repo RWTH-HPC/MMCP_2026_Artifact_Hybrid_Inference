@@ -1,0 +1,27 @@
+#!/bin/bash
+
+CLANG_STATIC_ANALYZER_DIR="@CLANG_STATIC_ANALYZER_DIR@"
+COMPILER_EXE="@_exe@"
+GENERATOR="@CMAKE_GENERATOR@"
+
+# Determine build command
+if [ "$GENERATOR" = "Unix Makefiles" ]; then
+  build_command=make
+elif [ "$GENERATOR" = "Ninja" ]; then
+  build_command=ninja
+else
+  echo "$0: error: unknown generator: $GENERATOR" >&2
+  exit 1
+fi
+
+# Run analyzer
+printf "\033[34mThe output of the analyzer will be saved to 'analyze.log'.\033[0m\n"
+$CLANG_STATIC_ANALYZER_DIR/bin/scan-build -o . $* --use-c++=$COMPILER_EXE \
+  $build_command -j \
+  $(python -c "import multiprocessing; print(multiprocessing.cpu_count()+2)") \
+  2>&1 | tee analyze.log
+if [ $? -eq 0 ]; then
+  printf "\033[32mSuccess! The output of the analyzer was saved to 'analyze.log'.\033[0m\n"
+else
+  printf "\033[31mError! The output of the analyzer was saved to 'analyze.log'.\033[0m\n"
+fi

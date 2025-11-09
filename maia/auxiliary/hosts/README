@@ -1,0 +1,44 @@
+The following rules apply to files in this folder:
+
+If you would like to add a new host, you need to make sure that is added to
+`<ZFS_ROOT>/cmake/GetHost.cmake` first. Then you need to create a file named
+`<HOST_NAME>.cmake` and place it in this folder.
+
+In the compiler file, CMake syntax has to be used. The following variables need
+to be set in order for the rest of scripts to work properly (careful, variable
+names are case-sensitive in Cmake):
+
+HOST_SUPPORTED_COMPILERS
+  Needs to be a list of supported compilers on this host.
+
+HOST_DEFAULT_COMPILER
+  Needs to be set to one of the compilers in HOST_SUPPORTED_COMPILERS. This
+  compiler is used if the users chooses none.
+
+HOST_COMPILER_EXE_<compiler>
+  Needs to be set with the full path to the compiler executable for each of the
+  supported compilers in HOST_SUPPORTED_COMPILERS.
+
+INCLUDE_DIRS
+  Needs to be a list of include directories for all required libraries.
+
+LIBRARY_DIRS
+  Needs to be a list of library directories for all required libraries.
+
+LIBRARY_NAMES
+  Needs to be a list of libraries that need to be linked to ZFS. The name should
+  be the library file name without the `lib` prefix or the `.a` or `.so` suffix,
+  e.g. `netcdf` or `mpi` instead of `libnetcdf.a` and `libmpi.so`.
+
+INCLUDE_DIRS_<COMPILER>, LIBRARY_DIRS_<COMPILER>, LIBRARY_NAMES_<COMPILER>
+  Contents have the same meaning as above, but these values are appended for the
+  compiler <COMPILER> (<COMPILER> all-uppercase).
+
+HOST_CONFIGURE
+  List of bash commands that should be executed during configure (e.g.
+  `module load` commands etc.).
+
+HOST_CONFIGURE_<COMPILER>
+  List of additional bash commands that are executed after the commands in
+  HOST_CONFIGURE, but only if the selected compiler is <COMPILER> (<COMPILER>
+  all-uppercase).

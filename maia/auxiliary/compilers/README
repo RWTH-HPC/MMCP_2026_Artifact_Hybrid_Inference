@@ -1,0 +1,21 @@
+The following rules apply to files in this folder:
+
+If you would like to add a new compiler, you need to make sure that it is added
+to `<ZFS_ROOT>/cmake/GetCompiler.cmake` first. Then you need to create a file
+named `<COMPILER_NAME>.cmake` and place it in this folder.
+
+In the compiler file, CMake syntax has to be used. The following variables need
+to be set in order for the rest of scripts to work properly (careful, variable
+names are case-sensitive in Cmake):
+
+BUILD_TYPES
+  Needs to be a list of supported build types.
+
+DEFAULT_BUILD_TYPE
+  Needs to be a string with the default build type. The default build type must
+  exist in the BUILD_TYPES list above.
+
+CMAKE_CXX_FLAGS_<BUILD_TYPE>
+  Needs to be set for each build type that exists in the BUILD_TYPES variable
+  above and contain a list of compiler flags. The build type needs to be all
+  uppercase.

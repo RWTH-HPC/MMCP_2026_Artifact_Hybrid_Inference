@@ -1,0 +1,8 @@
+# Filtering by source file
+SCOREP_FILE_NAMES_BEGIN
+  EXCLUDE */src/zfstensor.h
+SCOREP_FILE_NAMES_END
+
+# Filtering by region
+SCOREP_REGION_NAMES_BEGIN
+SCOREP_REGION_NAMES_END

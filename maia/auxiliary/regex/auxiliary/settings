@@ -1,0 +1,38 @@
+# Get settings script directory
+_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# Store ZFS root directory
+ZFS_DIR=$(dirname $(dirname $(dirname $_DIR)))
+
+# Store ZFS src/ directory
+SRC_DIR=$ZFS_DIR/src
+
+# Store directory with regex files
+REGEX_DIR=$ZFS_DIR/auxiliary/regex
+
+# Store directory with auxiliary regex files
+REGEX_AUX_DIR=$ZFS_DIR/auxiliary/regex/auxiliary
+
+# Set list of files with accessors (relative to src/)
+ACCESSOR_FILES="zfsavgblock.cpp zfscartesiangrid.h zfsdgblock.h zfsfvblock.h zfslbmblock.h"
+
+# Set list of files with cells
+CELL_FILES="zfsavgcell.h zfsavgcell.cpp zfsfvcell.h zfsfvcell.cpp zfslbmcell.h zfslbmcell.cpp zfsdgcell.h zfsdgcell.cpp zfsfvgcell.h zfsfvgcell.cpp zfscell.h"
+
+# Method to obtain list of files where normal regex should be applied
+regex_file_list() {
+  files=$(ls -1 $SRC_DIR/*.{h,cpp} | grep -v gridgen)
+  for f in $CELL_FILES; do
+    files=$(printf "$files" | grep -v $f)
+  done
+  printf "$files"
+}
+
+# Set path to refactoring tool in Python
+REFAC_TOOL=$REGEX_AUX_DIR/refac/refac/refac.py
+
+# Set directory with shell regex scripts
+SHELL_REGEX_DIR=$REGEX_AUX_DIR/shell
+
+# Set path to regex driver for shell regex
+SHELL_DRIVER=$SHELL_REGEX_DIR/driver.sh

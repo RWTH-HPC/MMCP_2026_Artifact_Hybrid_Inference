@@ -1,0 +1,43 @@
+# suffix
+*.ab123
+*breakpoints
+*breakpoints~
+*.cbp
+*.code-workspace
+*m_log
+.nfs000*
+*.o
+*.swp
+*.tmp
+*.orig
+
+# files
+config.log
+cwdlink
+compile_commands.json
+maia*
+!maia*.cpp
+!maia*.h
+Makefile.O
+tags
+
+# directories
+build_*/
+.cache
+.idea/
+.vscode/
+
+# links
+build_*_*
+
+# Documentation
+doc/cmake_install.cmake
+doc/code/doxygen/html
+doc/CMakeFiles/*
+doc/CMakeCache.txt
+doc/CMakeDoxyfile.in
+doc/CMakeDoxygenDefaults.cmake
+doc/Doxyfile*
+!doc/Doxyfile*.in
+doc/Makefile
+doc/warn.log

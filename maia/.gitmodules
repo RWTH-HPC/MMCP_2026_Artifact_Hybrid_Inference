@@ -1,0 +1,13 @@
+[submodule "include/cantera"]
+	path = include/cantera
+	url = https://github.com/Cantera/cantera.git
+	branch = v2.5.1
+
+[submodule "include/Eigen"]
+	path = include/Eigen
+	url = https://gitlab.com/libeigen/eigen.git
+	branch = master
+
+[submodule "include/doctest"]
+	path = include/doctest
+	url = https://github.com/doctest/doctest.git

@@ -1,0 +1,52 @@
+Checks:
+  -*,
+
+  mpi*,
+
+  modernize*,
+  -modernize-use-trailing-return-type,
+  -modernize-use-auto,
+  -modernize-loop-convert,
+  -modernize-avoid-c-arrays,
+  -modernize-raw-string-literal,
+  -modernize-use-nodiscard,
+
+  performance*,
+  -performance-avoid-endl,
+
+  bugprone*,
+  -bugprone-suspicious-semicolon,
+  -bugprone-macro-parentheses,
+
+  cppcoreguidelines*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-type-cstyle-cast,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-special-member-functions,
+  -cppcoreguidelines-pro-type-static-cast-downcast,
+
+  misc*,
+  -misc-non-private-member-variables-in-classes,
+
+  readability*,
+  -readability-avoid-const-params-in-decls,
+  -readability-named-parameter,
+  -readability-simplify-boolean-expr,
+  -readability-non-const-parameter,
+  -readability-redundant-declaration,
+  -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -readability-static-accessed-through-instance,
+  -readability-convert-member-functions-to-static,
+  -readability-magic-numbers
+
+CheckOptions:
+  - key:   readability-braces-around-statements.ShortStatementLines
+    value: '1'
+  - key:   cppcoreguidelines-avoid-do-while.IgnoreMacros
+    value: 'true'

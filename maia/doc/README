@@ -1,0 +1,4 @@
+To build the documentation of m-AIA you have to run the configure.py in the main directory first:
+Run "configure.py ? ?" in the main directory.
+After that run "make doc". This will take a few minutes.
+When it is finished you can open the documentation.html file in this directory with a web browser to view the documentation.

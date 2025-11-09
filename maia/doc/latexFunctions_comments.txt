@@ -1,0 +1,43 @@
+# defines a vector
+\newcommand{\mv}[1]{\underline{#1}}
+
+# defines a matrix
+\newcommand{\mm}[1]{\underline{\underline{{#1}}}}
+
+# defines dimensional values 
+\newcommand{\mdim}[1]{\overline{#1\mathstrut}}
+
+# short-cut for partial derivative
+\newcommand{\fracpart}[2]{\frac{\partial #1}{\partial #2}}
+
+# different averages
+# time average
+\newcommand{\mta}[1]{\bar{#1}}
+# Favre average
+\newcommand{\mfa}[1]{\hat{#1}}
+# other averages
+\newcommand{\avgVi}[1]{\left\langle #1 \right\rangle}
+\newcommand{\avgVs}[1]{\left\langle #1 \right\rangle^s}
+\newcommand{\avgVf}[1]{\left\langle #1 \right\rangle_F}
+
+# short-cut for order of
+\newcommand{\orderOf}[1]{\mathcal{O}(#1)}
+
+# short-cuts for rho', p', u', v', w'
+\newcommand{\rhop}[0]{\rho^\prime}
+\newcommand{\pp}[0]{p^\prime}
+\newcommand{\up}[0]{u^\prime}
+\newcommand{\vp}[0]{v^\prime}
+\newcommand{\wp}[0]{w^\prime}
+\newcommand{\rhopp}[0]{\rho^\prime^\prime}
+\newcommand{\ppp}[0]{p^\prime^\prime}
+\newcommand{\upp}[0]{u^\prime^\prime}
+\newcommand{\vpp}[0]{v^\prime^\prime}
+\newcommand{\wpp}[0]{w^\prime^\prime}
+
+# Δt, Δx
+\newcommand{\dt}{\Delta t}
+\newcommand{\dx}{\Delta x}
+
+# imaginary i
+\newcommand{\iu}{\mathrm{i}\mkern1mu}

@@ -1,0 +1,683 @@
+stages:
+  - staticChecks
+  - build
+  - unitTests
+  - test
+  - deploy
+    
+#-------------------------------------------------------------------------------
+
+.general:
+  except:
+    variables:
+      - $CI_MERGE_REQUEST_TITLE =~ /^WIP:/
+      - $CI_MERGE_REQUEST_TITLE =~ /^Draft:/  
+  before_script:
+    # ATTENTION: If modifying this before_script make sure, that inherited
+    # before_scripts such as in .testTemplate are kept synchronous.
+    #
+    # Delete all pending .nfs files in case of a previous interrupted run
+    - |
+      for nfs in `find . -name "*.nfs*"`
+      do
+        pid=`lsof -t $nfs`
+        if [ -z "$pid" ]
+        then
+          echo "DEBUG gitlab-ci.yml file problem with file: $nfs"
+        else
+          # Here, we forward an error such that the pipeline fails if kill -9 is
+          # not working as expected
+          set -e
+          kill -9 $pid
+          set +e
+        fi
+      done
+
+#-------------------------------------------------------------------------------
+
+prepare:
+  extends: .general
+  stage: .pre
+  tags:
+    - build
+  script:
+    # create job bin dir
+    - mkdir -p ~/scratch/bin
+    - mkdir -p ~/scratch/bin/bin.$CI_PIPELINE_ID
+    # Make sure log dir exists
+    - mkdir -p ~/scratch/logs
+  only:
+    - merge_requests
+    - master
+  interruptible: false
+
+    
+#-------------------------------------------------------------------------------
+
+cleanup:
+  extends: .general
+  stage: .post
+  tags:
+    - build
+  script:
+    #remove dir
+    - rm -r ~/scratch/bin/bin.$CI_PIPELINE_ID
+  only:
+    - merge_requests
+    - master
+  interruptible: false
+
+gitTagStable:
+  extends: .general
+  stage: .post
+  tags:
+    - build
+  script:
+    - | # Create stable tag if pipeline succeeded
+      echo "Successful master merge -> create stable"
+      git tag -f "stable" HEAD
+      # -V1
+      # Reference: https://gitlab.com/guided-explorations/gitlab-ci-yml-tips-tricks-and-hacks/commit-to-repos-during-ci/commit-to-repos-during-ci.git
+      #PRIVATE_TOKEN_FILE=~/.gitlab_token
+      #ACCESS_TOKEN=$(cat $PRIVATE_TOKEN_FILE)
+      #git push --tags http://root:$ACCESS_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git HEAD:master
+      # -V2
+      #git push --tags https://gitlab-ci-token:$CI_JOB_TOKEN@CI_SERVER_HOST/$CI_PROJECT_PATH.git HEAD:master
+      # -V3
+      #git push https://gitlab-ci-token:$CI_JOB_TOKEN@CI_SERVER_HOST/$CI_PROJECT_PATH.git "stable" --force
+      # -V4
+      git push https://gitlab-ci-token:$CI_JOB_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git "stable" --force
+  only:
+    - master
+  allow_failure: true
+  
+#-------------------------------------------------------------------------------
+
+clangFormat:
+  extends: .general
+  stage: staticChecks
+  tags:
+    - build
+  only:
+    - merge_requests
+    # master uncommented, since until now only check against remotes/origin/master
+    # which is always true for remotes/origin/master self-evidently
+    # TODO: add  a check against previous commit in case of merge with master
+    #- master
+  needs:
+    job: prepare
+  allow_failure: true
+  script:
+    - |
+      # RUN clangformat style check
+      set +e
+      failedFiles=""
+      noFailedFiles=0
+
+      NC="\033[0m"
+      RED="\033[1;31m"
+      GREEN="\033[32m"
+
+      echo "--clangFormat: diffs--------------------"
+      summary=""
+      forkPoint=`git merge-base --fork-point remotes/origin/master`
+      #print relevant .h and .cpp files, which were touched since last fork point
+      for f in $(git diff $forkPoint --name-only | grep -e '\.h' -e '\.cpp')
+      do
+        summary="$summary $f:"
+        diffOut=`git diff $forkPoint -U0 -- $f | /pds/opt/llvm/share/clang/clang-format-diff.py -p1`
+        if [ -z "$diffOut" ]
+        then
+          summary="$summary ${GREEN}PASSED${NC} \n"
+        else
+          summary="$summary ${RED}FAILED${NC} \n"
+          failedFiles="$failedFiles $f"
+          ((noFailedFiles=noFailedFiles+1))
+          echo -e "$diffOut"
+        fi
+      done
+
+      echo -e "\n"
+      echo "--clangFormat: summary------------------"
+      echo -e "$summary"
+      if [ $noFailedFiles -ne 0 ]
+      then
+        echo -e "clang-format check was ${RED}UNSUCCESSFUL${NC}"
+        echo "$noFailedFiles files did not pass clang-format style!"
+        echo "Please reformat failing files using clang-format"
+        echo "On AIA you can use following command for it:"
+        # TODO: here with $failedFiles clang format could be triggered
+        echo 'git diff `git merge-base --fork-point remotes/origin/master` -U0 | /pds/opt/llvm/share/clang/clang-format-diff.py -p1 -regex ".*\.(h|cpp)" -i '
+        echo "If you commit from a fork, use:"
+        echo 'git diff `git merge-base --fork-point remotes/YOURREMOTE/master` -U0 | /pds/opt/llvm/share/clang/clang-format-diff.py -p1 -regex ".*\.(h|cpp)" -i '
+        exit 1
+      else
+        echo -e "clang-format check was ${GREEN}SUCCESSFUL${NC}"
+      fi
+      echo "----------------------------------------"
+
+clangTidy:
+  extends: .general
+  stage: staticChecks
+  tags:
+    - build
+  only:
+    - merge_requests
+    # master uncommented, since until now only check against remotes/origin/master
+    # which is always true for remotes/origin/master self-evidently
+    # TODO: add  a check against previous commit in case of merge with master
+    #- master
+  needs:
+    job: prepare
+  allow_failure: true
+  script:
+    - configure.py clang production --cc --reset
+    - |
+      # Run clang-tidy
+      set +e
+      ./auxiliary/check_clang_tidy.sh
+
+#-------------------------------------------------------------------------------
+
+ParaViewPlugins:
+  stage: deploy
+  except:
+    variables:
+      - $CI_MERGE_REQUEST_TITLE =~ /^WIP:/
+      - $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+  needs: []
+  variables:
+    MAIA_COMMIT_SHA: $CI_MERGE_REQUEST_SOURCE_BRANCH_SHA
+    MAIA_PROJECT_PATH: $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH
+  trigger:
+    project: aia/MAIA/paraview-plugins
+    branch: master
+  allow_failure: false
+  only:
+    - merge_requests
+    - master
+
+#-------------------------------------------------------------------------------
+
+.buildTemplate:
+  variables:
+      GIT_SUBMODULE_STRATEGY: normal
+      GIT_SUBMODULE_UPDATE_FLAGS: --jobs 2
+  extends: .general
+  stage: build
+  tags:
+    - build
+  needs:
+    job: prepare
+  #The following variables have to be set by each specific build job
+  #variables:
+  #   configName: gnu production
+  #   buildName: gnu_production
+  script:
+    # Create slurm job to configure and compile
+    - srun -N1 -p twelve -n1 --exclusive bash -c "hostname;configure.py $configName --reset; time make -j 12"
+    # Make sure the executable is kept for testing
+    - cp build_$buildName/bin/maia ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$buildName
+  only:
+    - master
+
+.buildTemplateWithCantera:
+  extends: .buildTemplate
+  script:
+    # Create slurm job to configure and compile.
+    - srun -N1 -p twelve -n1 --exclusive bash -c "hostname;configure.py $configName --reset --install-cantera --with-cantera; time make -j 12"
+    # Make sure the executable is kept for testing
+    - cp build_$buildName/bin/maia ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$buildName
+
+GNU production:
+  extends: .buildTemplate
+  variables:
+    configName: gnu production
+    buildName: gnu_production
+  only:
+    - merge_requests
+    - master
+  script:
+    # Do script from .buildTemplate + additonal build/copy of unit tests
+    - !reference [.buildTemplate, script]
+    - srun -N1 -p twelve -n1 --exclusive bash -c "hostname; make test_maia -j 12"
+    - cp build_$buildName/bin/test_maia ~/scratch/bin/bin.$CI_PIPELINE_ID/test_maia.$buildName
+
+# Allows Cantera compilation in GNU production mode
+GNU production Cantera :
+  extends: .buildTemplateWithCantera
+  variables:
+    configName: gnu production
+    buildName: gnu_production_cantera
+  script:
+    # Override build template because of inconsistent naming scheme
+    - srun -N1 -p twelve -n1 --exclusive bash -c "hostname;configure.py $configName --reset --install-cantera --with-cantera; time make -j 12"
+    # Make sure the executable is kept for testing
+    - cp build_gnu_production/bin/maia ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$buildName
+  only:
+    - merge_requests
+    - master
+
+GNU debug :
+  extends: .buildTemplateWithCantera
+  variables:
+    configName: gnu debug
+    buildName: gnu_debug
+  interruptible: false
+  only:
+    - merge_requests
+    - master
+
+GNU extreme:
+  extends: .buildTemplate
+  variables:
+    configName: gnu extreme
+    buildName: gnu_extreme
+  only:
+    - merge_requests
+    - master
+
+GNU extra_debug:
+  extends: .buildTemplate
+  variables:
+    configName: gnu extra_debug
+    buildName: gnu_extra_debug
+  script:
+    # Override build template since this build result is not kept for testing
+    # Create slurm job to configure and compile
+    - srun -N1 -p twelve -n1 --exclusive bash -c "hostname;configure.py $configName --reset; time make -j 12"
+  interruptible: false
+
+GNU sanitize_address:
+  extends: .buildTemplateWithCantera
+  variables:
+    configName: gnu sanitize_address
+    buildName: gnu_sanitize_address
+  interruptible: false
+
+nvhpc production:
+  extends: .buildTemplate
+  variables:
+    configName: NVHPC production
+    buildName: nvhpc_production
+  script:
+    # Override build template since this build result is not kept for testing
+    # Create slurm job to configure and compile
+    - srun -N1 -p quadro6000 -n1 --exclusive bash -c "hostname;configure.py $configName --reset --enable-pstl turing; time make -j 10"
+    # Make sure the executable is kept for testing
+    - cp build_$buildName/bin/maia ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$buildName
+    - cp build_$buildName/lib/libNVHPCBUGFIX.so ~/scratch/bin/bin.$CI_PIPELINE_ID/.
+  only:
+    - merge_requests
+    - master
+    
+clang debug:
+  extends: .buildTemplate
+  variables:
+    configName: clang debug
+    buildName: clang_debug
+  only:
+    - merge_requests
+    - master
+    
+clang sanitize_conversion:
+  extends: .buildTemplate
+  variables:
+    configName: clang sanitize_conversion
+    buildName: clang_sanitize_conversion
+  interruptible: false
+    
+intel production:
+  extends: .buildTemplate
+  variables:
+    configName: intel production
+    buildName: intel_production
+  only:
+    - merge_requests
+    - master
+
+#-------------------------------------------------------------------------------
+
+.buildRemoteTemplate:
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
+    GIT_SUBMODULE_UPDATE_FLAGS: --jobs 2
+  extends: .general
+  stage: build
+  tags:
+    - build
+  needs:
+    job: prepare
+  #The following variables have to be set by each specific remote build job
+  #variables:
+  #   configName: gnu production
+  #   hostName: hawk.hww.hlrs.de
+  #   noJobs: 123
+  script:
+    - |
+      if ping -c 1 -W 1 $hostName; then
+         echo 'Sync Code...'
+         rsync -ahz --delete -e ssh * $hostName:Code/ci_test/.
+         ssh -t $hostName "source /etc/profile; cd Code/ci_test; ./configure.py $configName --reset --disable-updateGitSubmodules; time make -j $noJobs"
+       else
+         echo 'Host not reachable! Skip Test...'
+       fi
+  only:
+    - master
+
+gnu production HAWK:
+  extends: .buildRemoteTemplate
+  variables:
+    configName: gnu production
+    hostName: hawk.hww.hlrs.de
+    noJobs: 20
+  only:
+    - merge_requests
+    - master
+
+intel production CLAIX:
+  stage: build
+  needs: []
+  # Necessary for running on CLAIX
+  tags: 
+    - hpc
+  id_tokens:
+    HPC_CI_TOKEN:
+      aud: aixCIlenz
+
+  variables:
+    configName: intel production
+    noJobs: 24
+    # Parameters will be forwared to slurm
+    SLURM_PARAM_CPUS: "--cpus-per-task $noJobs"
+    SLURM_PARAMTIME: "-t 15:00"
+    SLURM_DPARAM_PARTITION: "-p devel"
+    SLURM_PARAM_PARTITION: "-p devel"
+
+  script:
+    - ./configure.py $configName --reset
+    - time make -j $noJobs
+
+  only:
+    - merge_requests
+    - master
+
+#-------------------------------------------------------------------------------
+
+.unitTestTemplate:
+  stage: unitTests
+  extends: .general
+  tags:
+    - test
+  only:
+    - merge_requests
+    - master
+  allow_failure: false
+  #The following variables have to be set by each specific build job
+  #variables:
+  #   buildName: gnu_production
+  script:
+    - |
+      output_file="unitTests_${buildName}_report.xml";
+      srun -N1 -p twelve -n1 --exclusive bash -c "hostname; ~/scratch/bin/bin.$CI_PIPELINE_ID/test_maia.$buildName --force-colors -npf --reporters=console,junit" \
+          | awk -v out_file="$output_file" '
+              /xml version/ { print > out_file; next }
+              /<testsuites>/ { in_range = 1 }
+              in_range { print > out_file }
+              /<\/testsuites>/ { in_range = 0; next }
+              !in_range { print } '
+  artifacts:
+    when: always
+    paths:
+      - unitTests_${buildName}_report.xml
+    reports:
+      junit: unitTests_${buildName}_report.xml
+
+GNU production unit test:
+  extends: .unitTestTemplate
+  variables:
+    buildName: gnu_production
+  needs:
+    job: GNU production
+
+#-------------------------------------------------------------------------------
+
+.testTemplate:
+  extends: .general
+  stage: test
+  tags:
+    - test
+  only:
+    - master
+  before_script:
+    # << copy from .general
+    # Delete all pending .nfs files in case of a previous interrupted run
+    - |
+      for nfs in `find . -name "*.nfs*"`
+      do
+        pid=`lsof -t $nfs`
+        if [ -z "$pid" ]
+        then
+          echo "DEBUG gitlab-ci.yml file problem with file: $nfs"
+        else
+          # Here, we forward an error such that the pipeline fails if kill -9 is
+          # not working as expected
+          set -e
+          kill -9 $pid
+          set +e
+        fi
+      done
+    # copy from .general >>
+    #
+    #Check: Is the merge-request labeled with "Testcase merge"?
+    #       If so, try to use a branch in testcase with same name as the branch 
+    #       of the merge-request.
+    - |
+      svnRepositoryRoot="http://svn/maia"
+      svnRelativePath="/testcases"
+      if [[ "$CI_MERGE_REQUEST_LABELS" =~ "Testcase merge" ]]
+      then
+        echo "Merge-Request is labed with 'Testcase merge'"
+        tmpSvnRelativPath="/branches/"$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+        tmpSvnBranch=$svnRepositoryRoot$tmpSvnRelativPath
+        svn info $tmpSvnBranch #> /dev/null 2>&1
+        error=$?
+        if [ $error -ne 1 ]
+        then
+          svnRelativePath=$tmpSvnRelativPath
+        else
+          echo "$tmpSvnBranch does not exist! Hence, default one is chosen"
+        fi
+      fi
+      export svnBranch=$svnRepositoryRoot$svnRelativePath
+      echo "Chosen branch: $svnBranch"
+    - |
+      foundRevision=''
+      if [[ "$CI_COMMIT_BRANCH" == "master" ]]
+      then
+        echo "Master merge. Finding corresponding testcase revision."
+        branchName=`git show | grep 'Merge branch' | cut -d\' -f2`
+        echo "Found branch name $branchName."
+        trunkRevs=`svn log $svnBranch | sed -n '/^r[0-9]/p' | cut -d '|' -f1`
+        echo "SVN testcase revisions to check $trunkRevs"
+        for rev in $trunkRevs; do
+          echo "Checking revision $rev."
+          prop1=`svn propget svn:mergeinfo $svnBranch -$rev`
+          prop=`echo $prop1 | grep $branchName || true`
+          if [[ -z "$prop" ]]
+          then
+            echo "Found testcase revision $foundRevision"
+            break
+          fi
+          foundRevision='-'$rev
+        done
+      fi
+      export svnRevision=$foundRevision
+      echo "Chosen revision: $svnRevision"
+    - |
+      if [[ -v canaryIgnore ]]
+      then
+        # check out only svn directories that are not ignored in the canary.ignore file
+        ./auxiliary/svn_export_without_ignored.py $svnBranch $canaryIgnore $testCaseName $svnRevision
+      else
+        echo "svn export $svnBranch $svnRevision testcases.$testCaseName"
+        svn export $svnBranch $svnRevision testcases.$testCaseName
+      fi
+  script:
+    - cry submit -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$testCaseName -n1 --split --stats timer testcases.$testCaseName
+  after_script:
+    - |
+      scratchDir=`readlink -f ~/scratch`
+      echo "Canary.log destination: $scratchDir/logs/canary.$testCaseName.$CI_PIPELINE_ID.log"
+      [[ -e canary.log ]] && cp canary.log $scratchDir/logs/canary.$testCaseName.$CI_PIPELINE_ID.log
+      [[ -e canary.log ]] && python3 ~/log2junit.py canary.log timer.json && mv Output.xml canary.$testCaseName.$CI_PIPELINE_ID.xml
+      [[ -e timer.json ]] && cp timer.json $scratchDir/stats/timer.$testCaseName.$CI_PIPELINE_ID.log
+  artifacts:
+    when: always
+    paths:
+      - canary.$testCaseName.$CI_PIPELINE_ID.xml
+      - timer.json
+    reports:
+      junit: canary.$testCaseName.$CI_PIPELINE_ID.xml
+
+GNU production Cantera testcases:
+  extends: .testTemplate
+  needs:
+    job: GNU production Cantera
+  variables:
+    testCaseName: gnu_production_cantera
+  only:
+    - merge_requests
+    - master
+
+GNU production Cantera valgrind testcases:
+  extends: .testTemplate
+  needs:
+    job: GNU production Cantera
+  variables:
+    testCaseName: gnu_production_vg
+  script:
+    - cry submit -V -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.gnu_production_cantera -n1 --split testcases.$testCaseName
+  interruptible: false
+
+GNU debug testcases:
+  extends: .testTemplate
+  needs:
+    job: GNU debug
+  variables:
+    testCaseName: gnu_debug
+  script:
+    - cd testcases.$testCaseName ; bash aux/checkForValidReferenceFiles.bsh ACA ; cd -
+    - cry submit -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$testCaseName -n1 --split --stats timer testcases.$testCaseName
+  interruptible: false
+  only:
+    - merge_requests
+    - master
+
+GNU sanitize_address testcases:
+  extends: .testTemplate
+  needs:
+    job: GNU sanitize_address
+  variables:
+    testCaseName: gnu_sanitize_address
+  interruptible: false
+
+clang debug testcases:
+  extends: .testTemplate
+  needs:
+    job: clang debug
+  variables:
+    testCaseName: clang_debug
+    canaryIgnore: clang
+  script:
+    - cry submit --config-file testcases.$testCaseName/aux/canary.ignore-clang.json -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$testCaseName -n1 --split --stats timer testcases.$testCaseName
+  interruptible: false
+
+clang sanitize_conversion testcases:
+  extends: .testTemplate
+  needs:
+    job: clang sanitize_conversion
+  variables:
+    testCaseName: clang_sanitize_conversion
+    canaryIgnore: clang
+  script:
+    - cry submit --config-file testcases.$testCaseName/aux/canary.ignore-clang.json -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$testCaseName -n1 --split --stats timer testcases.$testCaseName
+  interruptible: false
+
+intel production testcases:
+  extends: .testTemplate
+  needs:
+    job: intel production
+  variables:
+    testCaseName: intel_production
+    canaryIgnore: intel
+  script:
+    - cry submit --config-file testcases.$testCaseName/aux/canary.ignore-intel.json -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$testCaseName -n1 --split --stats timer testcases.$testCaseName
+  interruptible: false
+
+nvhpc production testcases:
+  extends: .testTemplate
+  needs:
+    job: nvhpc production
+  variables:
+    testCaseName: nvhpc_production
+    canaryIgnore: nvhpc
+  script:
+    - LD_PRELOAD=~/scratch/bin/bin.$CI_PIPELINE_ID/libNVHPCBUGFIX.so cry submit --config-file testcases.$testCaseName/aux/canary.ignore-nvhpc.json -z ~/scratch/bin/bin.$CI_PIPELINE_ID/maia.$testCaseName -n1 --split --stats timer testcases.$testCaseName --max-cpu 1 -q quadro6000
+  interruptible: false
+  only:
+    - merge_requests
+    - master
+
+#-------------------------------------------------------------------------------
+
+doxygen:
+  extends: .general
+  stage: build
+  needs: []
+  tags:
+    - build
+  script:
+    - echo "Building Doxygen documentation..."
+    - configure.py gnu debug --reset
+    - cd doc
+    - make doc
+  artifacts:
+    paths:
+      - doc/code/doxygen/html/
+  only:
+    - master
+  allow_failure: true
+
+pages:
+  extends: .general
+  stage: deploy
+  tags:
+    - build
+  needs:
+    job: doxygen
+  dependencies: 
+    - doxygen
+  script:
+    - echo "Deploying Doxygen documentation to GitLab Pages..."
+    - mv doc/code/doxygen/html/ public/
+  artifacts:
+    paths:
+      - public
+    expire_in: 5 days
+  only:
+    - master
+  allow_failure: true
+
+Gitlab Todo Issues:
+  extends: .general
+  stage: deploy
+  tags:
+    - build
+  script:
+    - echo "Updating GitLab TODO issues..."
+    - export PRIVATE_TOKEN_FILE=~/.gitlab_token
+    - python3 ./auxiliary/gitlab_issues_from_todos.py
+  only:
+    - master
+  allow_failure: true

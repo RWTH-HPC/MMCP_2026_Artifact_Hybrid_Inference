@@ -1,0 +1,162 @@
+#//////////////////////////////////////////////////////////////////////
+# INPUT/OUTPUT
+writeMetric = 0
+multiSolver = 1
+noGhostLayers = 2
+noSolvers = 1
+inputDir = "./" 			 # ROOT DIR OF INPUT FILES
+testcaseDir = "./"
+outputDir = "out/" 		     	 # ROOT DIR OF OUTPUT FILES
+gridInputFileName = "./grid_les_medium.hdf5"
+solutionOutput = "./out/"
+restartVariablesFileName = "restart_les_ref_medium.hdf5"	 # NAME OF RESTART FILE
+flowSolver = true
+restartFile = true		 # START FROM RESTART FILE
+useNonSpecifiedRestartFile = true
+debugOutput = true
+timeSteps = 250 #4000000
+constantTimeStep = true
+timeStepComputationInterval = 1
+maxIterations = 1
+solutionInterval = 10000  # OUTPUT INTERVAL IN TIMESTEPS, e.g. 2000
+residualInterval = 1000 	# RESIDUAL OUTPUT INTERVAL IN TIMESTEPS, e.g. 100
+forceSecondOrder = true
+forceOutputInterval = 1000  # auxData interval
+forceAsciiOutputInterval = 1000  # writing interval to forces.0.dat
+forceAsciiComputeInterval = 1
+auxOutputDir = "auxdata"
+computeLambda2 = true
+savePartitionOutput = false
+outputOffset = 0 		 # START SOLUTION OUTPUT NOT BEFORE THIS TIMESTEP
+computeForce = true 	 		 # COMPUTE PRESSURE COEFFICIENT
+computePower = true
+computeCpLineAverage = false	 # AVERAGE LIFT AND DRAG COEFFICENTS IN ONE DIRECTION
+auxDataCoordinateLimits = true
+auxDataLimits = [150.0, 200.0, -30.0, 130.0]
+cpAveragingDir = 2    		 # AVERAGING DIRECTION
+gridGenerator = false 		 # ALWAYS FALSE FOR STRUCTURED GRID
+maxNoCells = 800000 		 # NEEDED FOR CALCULATION OF SCRATCH SIZE
+scratchSize = 20   		 # MULTIPLICATOR FOR THE SCRATCH SIZE
+noDomains = 12
+ignoreUID = true
+#//////////////////////////////////////////////////////////////////////
+# POSTPROCESSING
+postprocessing = false
+postprocessingOps = "PP_AVERAGE_IN"  # pre, in=during solver run, post
+pp_averageStartTimestep = 90000  # 72900
+pp_averageStopTimestep =  100000  # 327200
+pp_averageInterval = 1
+#averaging properties
+pp_averageVorticity = true
+pp_averagingFavre = false
+pp_useKahan = false
+pp_twoPass = false
+pp_skewness = true
+pp_kurtosis = true
+pp_averageRestartInterval = 10000  # 5000
+pp_fileName = "out/mean_90000-100000.hdf5"
+pp_averageRestart = 1
+#//////////////////////////////////////////////////////////////////////
+# INTERPOLATION
+restartInterpolation = false
+donorGridName = "./grid_rans_medium.hdf5"  # "donorGrid.hdf5"
+donorVars = "./converged_rans_theta1_medium.hdf5"  # "donorVars.hdf5"
+donorScale = [1.0,1.0,300.0]
+donorTranslation = [0.0,0.0,-77.0]
+#//////////////////////////////////////////////////////////////////////
+# SPONGE
+useSponge = true
+readSpongeFromBC = false
+spongeLayerType = 6
+spongeLayerThickness = [50.0, 30.0, 20.0]
+sigmaSponge = [1.0, 1.0, 1.0]
+betaSponge = [2.0, 2.0, 2.0]
+spongeBndryCndIds = [7909, 7909, 7909]
+spongeWindowIds = [1, 2, 4]
+computeSpongeFactor = false
+#//////////////////////////////////////////////////////////////////////
+# SYNTHETIC TURBULENCE GENERATION (STG)
+useSTG = true
+BLT1 = 1.0		   # RELATIVE VALUE OF deltaIn
+BLT2 = 1.2  		   # usually 1.2 //RELATIVE VALUE OF deltaIn
+BLT3 = 1.0 	      	   # ABSOLUTE VALUE
+deltaIn = 8.83
+stgMaxNoEddies = 298
+stgCreateNewEddies = false
+stgExple = 0.5
+stgInitialStartup = false
+#//////////////////////////////////////////////////////////////////////
+# BOX OUTPUT:
+boxOutputDir = "boxes"
+boxOutputInterval = 0  # SET TO ZERO FOR NO BOX OUTPUT
+boxBlock = [0]  # BLOCK OF THE BOX
+boxOffsetI = [175]  # OFFSET OF BOX IN I-DIRECTION
+boxOffsetJ = [0]  # OFFSET OF BOX IN J-DIRECTION
+boxOffsetK = [0]  # OFFSET OF BOX IN K-DIRECTION
+boxSizeI = [366]  # SIZE OF BOX IN I-DIRECTION
+boxSizeJ = [188]  # SIZE OF BOX IN J-DIRECTION
+boxSizeK = [250]  # SIZE OF BOX IN K-DIRECTION
+boxWriteCoordinates = false
+#//////////////////////////////////////////////////////////////////////
+# PLANE OUTPUT:
+planeOutputDir = "planes"
+planeOutputInterval = 0  # SET TO ZERO FOR NO PLANE OUTPUT
+planeBlock = [0]  # BLOCK OF THE PLANE
+planeOffset = [25]  # OFFSET OF PLANE IN NORMAL DIRECITON
+planeNormal = [0]  # COORDINATE DIRECTIONS ARE REVERSE: 0 -> Z, 1 -> Y, 2 -> X
+planeWriteCoordinates = true
+#//////////////////////////////////////////////////////////////////////
+# PHYSICS:
+initialCondition = 0
+referenceLength = 1
+Re = 1000
+ReTau = 180
+diameter = 1
+maxRange = 41
+physicalTimeStep = 1
+gamma = 1.4
+Ma = 0.1
+angle = [0, 0]
+noSpecies = 0
+#//////////////////////////////////////////////////////////////////////
+# NUMERICS:
+cfl = 2.0
+solvertype.default = "MAIA_UNIFIED"
+solvertype.0 = "MAIA_STRUCTURED"
+convergenceCriterion = 1e-12
+timeStepConvergenceCriterion = 1e-6
+spaceDimensions = 3
+dualTimeStepping = false
+noRKSteps = 5
+rkalpha-step = [0.25, 0.16666666666, 0.375, 0.5, 1.0]
+upwindCoefficient = 0
+noGridLevels = 1
+lambda = [1, 1, 2, 1, 2]
+timeStepMethod = 1
+#//////////////////////////////////////////////////////////////////////
+# ZONAL:
+zonalcomputation = 0	 # IS/IS NOT ZONAL COMPUTATION
+fullRANS = false	 	 # CHECK WHEN ALL BLOCKS ARE RANS
+fullLES = 1		 # CHECK WHEN ALL BLOCKS ARE LES
+no_RANS_zone = 0	 # NO OF RANS ZONES
+no_LES_zone = 1	 # NO OF LES ZONES
+RANS_zone = 0		 # BLOCK IDS OF THE RANS ZONES
+LES_zone = 0		 # BLOCK IDS OF THE LES ZONES
+zonalExchangeInterval = 5 # EXCHANGE INTERVAL BETWEEN ZONES
+zonalAvgFactor = 128.0
+#//////////////////////////////////////////////////////////////////////
+# NOT NEEDED FOR STRUCTURED PART:
+maxRfnmntLvl = 8
+executionRecipe = "RECIPE_BASE"
+# TRANSFORMER:
+modelPath = "/hpcwork/rwth0792/MMCP_2026_benchmarks/HybridInferenceMAIA/common/transformer_inference_scripted_fw2.pt"
+mlInterval = 5
+mlInputLength = 5
+mlStepCoefficient = 12
+mlForecastWindow = 2
+mlScalingFactor = 1
+mlCubeOverlap = 0
+mlCubeD = 8
+mlInputStepDistance = 1
+enableHybridInference = true
+hostFraction = "0.2"

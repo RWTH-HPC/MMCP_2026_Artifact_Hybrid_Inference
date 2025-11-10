@@ -2,7 +2,7 @@
 
 source ./setup_env_claix23.sh
 
-source ./cpp-ml-interface/extern/python/venv/bin/activate
+source ./CPP-ML-Interface/extern/python/venv/bin/activate
 
 export SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--verbose=1 --nocompiler --user --mpp=mpi --io=none --memory=none --thread=none --nocuda"
 export SCOREP_ENABLE_CUDA=0

@@ -120,20 +120,20 @@ endif()
 #set(LIBRARY_NAMES ${LIBRARY_NAMES} "phydll")
 
 #####################
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/libtorch/include)
-set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/libtorch/lib)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/libtorch/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/libtorch/lib)
 set(LIBRARY_NAMES ${LIBRARY_NAMES} "torch" "c10" "torch_cpu" "torch_cuda")
 
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/aixeleratorservice/INSTALL-SCOREP/include)
-set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/aixeleratorservice/INSTALL-SCOREP/lib)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/aixeleratorservice/INSTALL-SCOREP/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/aixeleratorservice/INSTALL-SCOREP/lib)
 set(LIBRARY_NAMES ${LIBRARY_NAMES} "AIxeleratorService")
 
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/phydll/BUILD-SCOREP/include)
-set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/phydll/BUILD-SCOREP/lib)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/phydll/BUILD-SCOREP/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/phydll/BUILD-SCOREP/lib)
 set(LIBRARY_NAMES ${LIBRARY_NAMES} "phydll")
 
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/BUILD-SCOREP/include)
-set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/BUILD-SCOREP/lib)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/BUILD-SCOREP/include)
+set(LIBRARY_DIRS ${LIBRARY_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/BUILD-SCOREP/lib)
 set(LIBRARY_NAMES ${LIBRARY_NAMES} "mlCoupling")
 
 ################################################################################
@@ -141,7 +141,7 @@ set(LIBRARY_NAMES ${LIBRARY_NAMES} "mlCoupling")
 ################################################################################
 # Set additional include/library directories or libraries for HighFive
 #set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../../HighFive/HighFive/BUILD/INSTALL/include)
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../cpp-ml-interface/extern/HighFive/BUILD/INSTALL/include)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${SRC_DIR_ABS}/../../CPP-ML-Interface/extern/HighFive/BUILD/INSTALL/include)
 ################################################################################
 
 

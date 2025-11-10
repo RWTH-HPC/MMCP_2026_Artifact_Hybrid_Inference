@@ -17,7 +17,7 @@ Towards the conference/workshop data on January 26-29, 2026, we will update the 
 ## Installation
 
 ### Software Environment
-The code was tested on the CLAIX-2023 cluster at RWTH Aachen University using the following software stack
+The code was tested on the CLAIX-2023 cluster at RWTH Aachen University.
 On CLAIX-2023 you can setup the correct environment via
 ```
 source setup_env_claix23.sh

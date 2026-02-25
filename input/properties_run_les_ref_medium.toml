@@ -149,7 +149,7 @@ zonalAvgFactor = 128.0
 maxRfnmntLvl = 8
 executionRecipe = "RECIPE_BASE"
 # TRANSFORMER:
-modelPath = "/home/rwth0792/mmcp_2026_artifact/input/transformer_inference_scripted_fw2.pt"
+modelPath = "/hpcwork/fe302221/mmcp_2026_artifact/input/MMCP_2026_Material/transformer_inference_scripted_fw2.pt"
 mlInterval = 5
 mlInputLength = 5
 mlStepCoefficient = 12
